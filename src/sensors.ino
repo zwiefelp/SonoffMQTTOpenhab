@@ -78,14 +78,17 @@ void sensorPIR() {
   }
 
   if (digitalRead(sensorPin) == LOW && pirDetect) {
+    Serial.println("sensorPin = LOW");
     pirDetect = false;
   }
 }
 
 void sensorPIRCallback(void *pArg) {
   os_timer_disarm(&pirTimer);
+  Serial.println("PIR Timer expired..");
   snprintf (msg, 75, "%s %s", sensorTopic, "OFF");
   Serial.print("Publish message: ");
   Serial.println(msg);
   client.publish(sensorTopic, "OFF", true);
+  pirDetect = false;
 }
