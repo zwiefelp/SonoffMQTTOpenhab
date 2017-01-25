@@ -65,6 +65,7 @@ bool pirDetect = false;
 
 void sensorPIR() {
   if (digitalRead(sensorPin) == HIGH && !pirDetect) {
+    os_timer_disarm(&pirTimer);
     //void os_timer_setfn(os_timer_t *pTimer, os_timer_func_t *pFunction, void *pArg)
     os_timer_setfn(&pirTimer, sensorPIRCallback, NULL);
     //void os_timer_arm(os_timer_t *pTimer, uint32_t milliseconds, bool repeat)
@@ -82,6 +83,7 @@ void sensorPIR() {
 }
 
 void sensorPIRCallback(void *pArg) {
+  os_timer_disarm(&pirTimer);
   snprintf (msg, 75, "%s %s", sensorTopic, "OFF");
   Serial.print("Publish message: ");
   Serial.println(msg);
