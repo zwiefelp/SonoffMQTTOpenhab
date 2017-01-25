@@ -148,7 +148,7 @@ void btnLoop() {
 
 void sensorLoop() {
   if(strcmp(sensorType,"BTN") == 0) {
-
+    sensorBTN();
   }
 }
 
