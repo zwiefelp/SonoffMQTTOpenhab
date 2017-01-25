@@ -11,6 +11,10 @@
 //#include <map>
 #include <config.h>
 
+extern "C" {
+  #include "user_interface.h"
+}
+
 IPAddress broker(192,168,1,1);          // Address of the MQTT broker
 WiFiClient wificlient;
 PubSubClient client(wificlient);
@@ -149,6 +153,12 @@ void btnLoop() {
 void sensorLoop() {
   if(strcmp(sensorType,"BTN") == 0) {
     sensorBTN();
+  }
+  if(strcmp(sensorType,"TEMP") == 0) {
+    sensorTemp();
+  }
+  if(strcmp(sensorType,"PIR") == 0) {
+    sensorPIR();
   }
 }
 
