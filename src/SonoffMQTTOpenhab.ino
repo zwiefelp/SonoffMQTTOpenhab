@@ -9,6 +9,7 @@
 #include <ArduinoOTA.h>
 #include <PubSubClient.h>
 //#include <map>
+#include <user_config.h>
 #include <config.h>
 
 extern "C" {

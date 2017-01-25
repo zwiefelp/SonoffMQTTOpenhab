@@ -2,3 +2,6 @@
 .piolibdeps
 .clang_complete
 .gcc-flags.json
+.pioenvs
+.piolibdeps
+src/user_config.h
