@@ -18,6 +18,7 @@ char confTopic[50];
 char sensorTopic[50];
 char sensorType[10];
 
+/* Runtime Variables */
 unsigned int confstage;
 char msg[200];
 bool configured = false;
