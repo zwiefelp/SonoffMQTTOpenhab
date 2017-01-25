@@ -64,6 +64,7 @@ os_timer_t pirTimer;
 bool pirDetect = false;
 
 void sensorPIR() {
+  /*
   if (digitalRead(sensorPin) == HIGH && !pirDetect) {
     os_timer_disarm(&pirTimer);
     //void os_timer_setfn(os_timer_t *pTimer, os_timer_func_t *pFunction, void *pArg)
@@ -80,6 +81,22 @@ void sensorPIR() {
   if (digitalRead(sensorPin) == LOW && pirDetect) {
     Serial.println("sensorPin = LOW");
     pirDetect = false;
+  }
+  */
+  int pin = digitalRead(sensorPin);
+  if ( pin == 1 ) {
+    if (pirDetect == false) {
+      Serial.print(millis());
+      Serial.println(" - sensorPin = HIGH");
+      pirDetect = true;
+    }
+  }
+  if ( pin == 0 ) {
+    if (pirDetect == true) {
+      Serial.print(millis());
+      Serial.println(" - sensorPin = LOW");
+      pirDetect = false;
+    }
   }
 }
 

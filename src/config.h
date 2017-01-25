@@ -1,6 +1,10 @@
 /* Version */
 const char* version = "1.0";
 
+/* WiFi Settings */
+const char* ssid     = "OpenHAB";
+const char* password = "$OpenHAB123";
+
 /* Sonoff Outputs */
 const int relayPin = 12;  // 12 = D6 - Active high
 const int ledPin   = 13; // 13 = D7 - Active low
