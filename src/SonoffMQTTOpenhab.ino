@@ -8,12 +8,14 @@
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
 #include <PubSubClient.h>
+//#include <map>
 #include <config.h>
 
 IPAddress broker(192,168,1,1);          // Address of the MQTT broker
 WiFiClient wificlient;
 PubSubClient client(wificlient);
 long id = ESP.getChipId();
+//std::map <string, char> config;
 
 /**
  * Setup
@@ -26,6 +28,7 @@ void setup() {
   cmdTopic[0]=0;
   snprintf(client_id,20,"client-%li", id);
   snprintf(confTopic,50,"/openhab/configuration/%li",id);
+  //config[confTopic] = confTopic;
 
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
