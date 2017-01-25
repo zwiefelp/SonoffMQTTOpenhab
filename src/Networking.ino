@@ -3,7 +3,7 @@
 /**
  * MQTT callback to process messages
  */
-void callback(char* topic, byte* payload, unsigned int length) {
+void mqttCallback(char* topic, byte* payload, unsigned int length) {
   Serial.print("Message arrived [");
   Serial.print(topic);
   Serial.print("] ");
@@ -43,7 +43,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
 /**
  * Attempt connection to MQTT broker and subscribe to command topic
  */
-void reconnect() {
+void mqttReconnect() {
   // Loop until we're reconnected
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");

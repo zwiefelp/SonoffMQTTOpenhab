@@ -82,7 +82,7 @@ void setup() {
 
   /* Prepare MQTT client */
   client.setServer(broker, 1883);
-  client.setCallback(callback);
+  client.setCallback(mqttCallback);
 }
 
 void toggleState() {
@@ -169,7 +169,7 @@ void loop() {
 
   if (WiFi.status() == WL_CONNECTED) {
     if (!client.connected()) {
-      reconnect();
+      mqttReconnect();
     }
   }
 
