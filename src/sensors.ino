@@ -64,27 +64,9 @@ os_timer_t pirTimer;
 bool pirDetect = false;
 
 void sensorPIR() {
-  /*
-  if (digitalRead(sensorPin) == HIGH && !pirDetect) {
-    os_timer_disarm(&pirTimer);
-    //void os_timer_setfn(os_timer_t *pTimer, os_timer_func_t *pFunction, void *pArg)
-    os_timer_setfn(&pirTimer, sensorPIRCallback, NULL);
-    //void os_timer_arm(os_timer_t *pTimer, uint32_t milliseconds, bool repeat)
-    os_timer_arm(&pirTimer, sensorTimer, false);
-    pirDetect = true;
-    snprintf (msg, 75, "%s %s", sensorTopic, "ON");
-    Serial.print("Publish message: ");
-    Serial.println(msg);
-    client.publish(sensorTopic, "ON", true);
-  }
-
-  if (digitalRead(sensorPin) == LOW && pirDetect) {
-    Serial.println("sensorPin = LOW");
-    pirDetect = false;
-  }
-  */
   int pin = digitalRead(sensorPin);
   if ( pin == 1 && !pirDetect ) {
+    os_timer_disarm(&pirTimer);
     snprintf (msg, 75, "%s %s", sensorTopic, "ON");
     Serial.print("Publish message: ");
     Serial.println(msg);
@@ -92,17 +74,17 @@ void sensorPIR() {
     pirDetect = true;
   }
   if ( pin == 0 && pirDetect) {
-    snprintf (msg, 75, "%s %s", sensorTopic, "OFF");
-    Serial.print("Publish message: ");
-    Serial.println(msg);
-    client.publish(sensorTopic, "OFF", true);
+    os_timer_disarm(&pirTimer);
+    //void os_timer_setfn(os_timer_t *pTimer, os_timer_func_t *pFunction, void *pArg)
+    os_timer_setfn(&pirTimer, sensorPIRCallback, NULL);
+    //void os_timer_arm(os_timer_t *pTimer, uint32_t milliseconds, bool repeat)
+    os_timer_arm(&pirTimer, sensorTimer, false);
     pirDetect = false;
   }
 }
 
 void sensorPIRCallback(void *pArg) {
   os_timer_disarm(&pirTimer);
-  Serial.println("PIR Timer expired..");
   snprintf (msg, 75, "%s %s", sensorTopic, "OFF");
   Serial.print("Publish message: ");
   Serial.println(msg);
