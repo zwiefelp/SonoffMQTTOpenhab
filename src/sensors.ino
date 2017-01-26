@@ -84,19 +84,19 @@ void sensorPIR() {
   }
   */
   int pin = digitalRead(sensorPin);
-  if ( pin == 1 ) {
-    if (pirDetect == false) {
-      Serial.print(millis());
-      Serial.println(" - sensorPin = HIGH");
-      pirDetect = true;
-    }
+  if ( pin == 1 && !pirDetect ) {
+    snprintf (msg, 75, "%s %s", sensorTopic, "ON");
+    Serial.print("Publish message: ");
+    Serial.println(msg);
+    client.publish(sensorTopic, "ON", true);
+    pirDetect = true;
   }
-  if ( pin == 0 ) {
-    if (pirDetect == true) {
-      Serial.print(millis());
-      Serial.println(" - sensorPin = LOW");
-      pirDetect = false;
-    }
+  if ( pin == 0 && pirDetect) {
+    snprintf (msg, 75, "%s %s", sensorTopic, "OFF");
+    Serial.print("Publish message: ");
+    Serial.println(msg);
+    client.publish(sensorTopic, "OFF", true);
+    pirDetect = false;
   }
 }
 
