@@ -8,9 +8,12 @@
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
 #include <PubSubClient.h>
+#include <RCSwitch.h>
 //#include <map>
 #include <user_config.h>
 #include <config.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 extern "C" {
   #include "user_interface.h"
@@ -160,6 +163,9 @@ void sensorLoop() {
   }
   if(strcmp(sensorType,"PIR") == 0) {
     sensorPIR();
+  }
+  if(strcmp(sensorType,"RF") == 0) {
+    sensorRF();
   }
 }
 

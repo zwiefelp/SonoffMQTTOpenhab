@@ -17,6 +17,7 @@ char stateTopic[50];
 char confTopic[50];
 char sensorTopic[50];
 char sensorType[10];
+char sensorBlink[4];
 
 /* Runtime Variables */
 unsigned int confstage;

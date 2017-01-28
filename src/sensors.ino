@@ -44,6 +44,11 @@ float tempReading = 0.0f;
 
 void sensorTemp() {
   if (!tempInit) {
+    Serial.print("initialize Temp - Pin=");
+    Serial.print(sensorPin);
+    Serial.print(" Timer=");
+    Serial.println(sensorTimer);
+
     //void os_timer_setfn(os_timer_t *pTimer, os_timer_func_t *pFunction, void *pArg)
     os_timer_setfn(&tempTimer, sensorTempCallback, NULL);
     //void os_timer_arm(os_timer_t *pTimer, uint32_t milliseconds, bool repeat)
@@ -89,4 +94,49 @@ void sensorPIRCallback(void *pArg) {
   Serial.println(msg);
   client.publish(sensorTopic, "OFF", true);
   pirDetect = false;
+}
+
+bool rfInit = false;
+RCSwitch rfRec = RCSwitch();
+long lastval = 0;
+unsigned long lastrec = 0;
+char rfmsg[20];
+
+void sensorRF() {
+  if (!rfInit) {
+    Serial.print("initialize RF - Pin=");
+    Serial.print(sensorPin);
+    Serial.print(" Timer=");
+    Serial.println(sensorTimer);
+    rfRec.enableReceive(sensorPin);
+    rfInit = true;
+  }
+  if (rfRec.available()) {
+
+    int value = rfRec.getReceivedValue();
+
+    if (value == 0) {
+      Serial.print("Unknown encoding");
+    } else {
+      long newval = rfRec.getReceivedValue();
+      if ( lastval != newval || millis() - lastrec > sensorTimer) {
+        snprintf (rfmsg, 20, "%li", newval);
+        snprintf (msg, 75, "%s %s", sensorTopic, rfmsg);
+        Serial.print("Publish message: ");
+        Serial.println(msg);
+        client.publish(sensorTopic, rfmsg, true);
+        if (strcmp(sensorBlink,"1") == 0) {
+          ledFlash(1,50);
+        }
+        lastval = newval;
+        lastrec = millis();
+      } else {
+        if (millis() - lastrec > sensorTimer) {
+          lastrec = 0;
+        }
+      }
+    }
+    rfRec.resetAvailable();
+  }
+
 }

@@ -4,10 +4,6 @@
  * MQTT callback to process messages
  */
 void mqttCallback(char* topic, byte* payload, unsigned int length) {
-  Serial.print("Message arrived [");
-  Serial.print(topic);
-  Serial.print("] ");
-
   char spayload[length];
   memcpy(spayload, payload, length);
   spayload[length] = '\0';

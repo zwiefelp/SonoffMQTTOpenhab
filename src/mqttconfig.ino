@@ -75,10 +75,18 @@ void getConfiguration(char* cmd) {
         goto finish;
       }
 
+      if (strcmp(ptr,"sensorBlink") == 0) {
+        ptr = strtok(NULL, delimiter);
+        strcpy(sensorBlink,ptr);
+        Serial.print("Received sensorBlink: ");
+        Serial.println(sensorBlink);
+        goto finish;
+      }
+
       if (strcmp(ptr,"sensorTimer") == 0) {
         ptr = strtok(NULL, delimiter);
         strcpy(temp,ptr);
-        sensorTimer = atol(temp);
+        sensorTimer = strtol(temp,&ptr,10);
         Serial.print("Received sensorTimer: ");
         Serial.println(sensorTimer);
         goto finish;
@@ -87,7 +95,7 @@ void getConfiguration(char* cmd) {
       if (strcmp(ptr,"sensorPin") == 0) {
         ptr = strtok(NULL, delimiter);
         strcpy(temp,ptr);
-        sensorPin=atoi(temp);
+        sensorPin = strtol(temp, &ptr, 10);
         Serial.print("Received sensorPin: ");
         Serial.println(sensorPin);
         pinMode(sensorPin, INPUT);
