@@ -98,7 +98,8 @@ void sensorPIRCallback(void *pArg) {
 
 bool rfInit = false;
 RCSwitch rfRec = RCSwitch();
-long lastval = 0;
+unsigned long lastval = 0;
+unsigned long newval = 0;
 unsigned long lastrec = 0;
 char rfmsg[20];
 
@@ -118,7 +119,7 @@ void sensorRF() {
     if (value == 0) {
       Serial.print("Unknown encoding");
     } else {
-      long newval = rfRec.getReceivedValue();
+      newval = rfRec.getReceivedValue();
       if ( lastval != newval || millis() - lastrec > sensorTimer) {
         snprintf (rfmsg, 20, "%li", newval);
         snprintf (msg, 75, "%s %s", sensorTopic, rfmsg);

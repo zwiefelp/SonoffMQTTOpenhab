@@ -6,9 +6,9 @@ const char* ssid     = "OpenHAB";
 const char* password = "$OpenHAB123";
 
 /* Sonoff Outputs */
-const int relayPin = 12;  // 12 = D6 - Active high
-const int ledPin   = 13; // 13 = D7 - Active low
-const int btnPin = 0;     //  0 = D3 - Active low
+int relayPin = 12;  // 12 = D6 - Active high
+int ledPin   = 13; // 13 = D7 - Active low
+int btnPin = 0;     //  0 = D3 - Active low
 int sensorPin = 14;       // 14 = D5
 
 /* MQTT Settings */

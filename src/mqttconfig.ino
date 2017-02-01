@@ -102,6 +102,16 @@ void getConfiguration(char* cmd) {
         goto finish;
       }
 
+      if (strcmp(ptr,"ledPin") == 0) {
+        ptr = strtok(NULL, delimiter);
+        strcpy(temp,ptr);
+        ledPin = strtol(temp, &ptr, 10);
+        Serial.print("Received ledPin: ");
+        Serial.println(ledPin);
+        pinMode(ledPin, OUTPUT);
+        goto finish;
+      }
+
       if (strcmp(ptr,"EndConfig") == 0) {
         Serial.println("EndConfig");
         confstage = 4;
