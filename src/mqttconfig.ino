@@ -44,71 +44,109 @@ void getConfiguration(char* cmd) {
 
       if (strcmp(ptr,"cmdTopic") == 0) {
         ptr = strtok(NULL, delimiter);
-        strcpy(cmdTopic,ptr);
+        strcpy(sonoffs[sonoffcount].cmdTopic,ptr);
         Serial.print("Received cmdTopic: ");
-        Serial.println(cmdTopic);
-        client.subscribe(cmdTopic);
+        Serial.println(sonoffs[sonoffcount].cmdTopic);
+        client.subscribe(sonoffs[sonoffcount].cmdTopic);
         goto finish;
       }
 
       if (strcmp(ptr,"stateTopic") == 0) {
         ptr = strtok(NULL, delimiter);
-        strcpy(stateTopic,ptr);
+        strcpy(sonoffs[sonoffcount].stateTopic,ptr);
         Serial.print("Received stateTopic: ");
-        Serial.println(stateTopic);
+        Serial.println(sonoffs[sonoffcount].stateTopic);
         goto finish;
       }
 
-      if (strcmp(ptr,"sensorTopic") == 0) {
+      if (strcmp(ptr,"sensorTopic") == 0 || strcmp(ptr,"sensorTopic1") == 0) {
         ptr = strtok(NULL, delimiter);
-        strcpy(sensorTopic,ptr);
-        Serial.print("Received sensorTopic: ");
-        Serial.println(sensorTopic);
+        strcpy(sensors[sensorcount].sensorTopic1,ptr);
+        Serial.print("Received sensorTopic1: ");
+        Serial.println(sensors[sensorcount].sensorTopic1);
         goto finish;
       }
+
+      if (strcmp(ptr,"sensorTopic2") == 0 ) {
+        ptr = strtok(NULL, delimiter);
+        strcpy(sensors[sensorcount].sensorTopic2,ptr);
+        Serial.print("Received sensorTopic2: ");
+        Serial.println(sensors[sensorcount].sensorTopic2);
+        goto finish;
+      }
+
 
       if (strcmp(ptr,"sensorType") == 0) {
         ptr = strtok(NULL, delimiter);
-        strcpy(sensorType,ptr);
+        strcpy(sensors[sensorcount].sensorType,ptr);
         Serial.print("Received sensorType: ");
-        Serial.println(sensorType);
+        Serial.println(sensors[sensorcount].sensorType);
         goto finish;
       }
 
       if (strcmp(ptr,"sensorBlink") == 0) {
         ptr = strtok(NULL, delimiter);
-        strcpy(sensorBlink,ptr);
+        strcpy(sensors[sensorcount].sensorBlink,ptr);
         Serial.print("Received sensorBlink: ");
-        Serial.println(sensorBlink);
+        Serial.println(sensors[sensorcount].sensorBlink);
         goto finish;
       }
 
       if (strcmp(ptr,"sensorTimer") == 0) {
         ptr = strtok(NULL, delimiter);
         strcpy(temp,ptr);
-        sensorTimer = strtol(temp,&ptr,10);
+        sensors[sensorcount].sensorTimer = strtol(temp,&ptr,10);
         Serial.print("Received sensorTimer: ");
-        Serial.println(sensorTimer);
+        Serial.println(sensors[sensorcount].sensorTimer );
         goto finish;
       }
 
-      if (strcmp(ptr,"sensorPin") == 0) {
+      if (strcmp(ptr,"sensorPin") == 0 || strcmp(ptr,"sensorPin1") == 0) {
         ptr = strtok(NULL, delimiter);
         strcpy(temp,ptr);
-        sensorPin = strtol(temp, &ptr, 10);
-        Serial.print("Received sensorPin: ");
-        Serial.println(sensorPin);
-        pinMode(sensorPin, INPUT);
+        sensors[sensorcount].sensorPin1 = strtol(temp, &ptr, 10);
+        Serial.print("Received sensorPin1: ");
+        Serial.println(sensors[sensorcount].sensorPin1);
+        pinMode(sensors[sensorcount].sensorPin1, INPUT);
         goto finish;
       }
+
+      if (strcmp(ptr,"sensorPin2") == 0 ) {
+        ptr = strtok(NULL, delimiter);
+        strcpy(temp,ptr);
+        sensors[sensorcount].sensorPin2 = strtol(temp, &ptr, 10);
+        Serial.print("Received sensorPin2: ");
+        Serial.println(sensors[sensorcount].sensorPin2);
+        pinMode(sensors[sensorcount].sensorPin2, INPUT);
+        goto finish;
+      }
+
 
       if (strcmp(ptr,"ledPin") == 0) {
         ptr = strtok(NULL, delimiter);
         strcpy(temp,ptr);
-        ledPin = strtol(temp, &ptr, 10);
+        sonoffs[sonoffcount].ledPin = strtol(temp, &ptr, 10);
         Serial.print("Received ledPin: ");
-        Serial.println(ledPin);
-        pinMode(ledPin, OUTPUT);
+        Serial.println(sonoffs[sonoffcount].ledPin);
+        pinMode(sonoffs[sonoffcount].ledPin, OUTPUT);
+        goto finish;
+      }
+
+      if (strcmp(ptr,"sensor") == 0) {
+        ptr = strtok(NULL, delimiter);
+        strcpy(temp,ptr);
+        sensorcount= strtol(temp, &ptr, 10);
+        Serial.print("Received sensor: ");
+        Serial.println(sensorcount);
+        goto finish;
+      }
+
+      if (strcmp(ptr,"sonoff") == 0) {
+        ptr = strtok(NULL, delimiter);
+        strcpy(temp,ptr);
+        sonoffcount= strtol(temp, &ptr, 10);
+        Serial.print("Received sonoff: ");
+        Serial.println(sonoffcount);
         goto finish;
       }
 

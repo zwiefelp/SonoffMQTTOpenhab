@@ -23,7 +23,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   }
 
   // Examine Command Message
-  if (strcmp(topic,cmdTopic) == 0) {
+  if (strcmp(topic,sonoffs[1].cmdTopic) == 0) {
     if ( strcmp(spayload,"ON") == 0) {
       setState("ON");
     }
@@ -49,8 +49,8 @@ void mqttReconnect() {
       snprintf(msg,50,"Startup %li - Version %s", id, version);
       ledFlash(2,100);
       client.publish("/openhab/esp8266", msg);
-      if ( strlen(cmdTopic) != 0 ) {
-        client.subscribe(cmdTopic);
+      if ( strlen(sonoffs[1].cmdTopic) != 0 ) {
+        client.subscribe(sonoffs[1].cmdTopic);
       }
       client.subscribe(confTopic);
     } else {
