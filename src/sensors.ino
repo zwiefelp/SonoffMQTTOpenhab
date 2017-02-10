@@ -141,5 +141,61 @@ void sensorRF(int nr) {
     }
     rfRec.resetAvailable();
   }
+}
 
+bool dhtInit = false;
+os_timer_t dhtTimer;
+double dhtTempReading = 0;
+double dhtHumReading = 0;
+dht DHT;
+
+void sensorDHT(int nr) {
+  if (!dhtInit) {
+    Serial.print("initialize DHT22 - Pin=");
+    Serial.print(sensors[nr].sensorPin1);
+    Serial.print(" Timer=");
+    Serial.println(sensors[nr].sensorTimer);
+    //dht((uint8_t)sensors[nr].sensorPin1, DHTTYPE);
+
+    //void os_timer_setfn(os_timer_t *pTimer, os_timer_func_t *pFunction, void *pArg)
+    os_timer_setfn(&dhtTimer, sensorDHTCallback, &nr);
+    //void os_timer_arm(os_timer_t *pTimer, uint32_t milliseconds, bool repeat)
+    os_timer_arm(&dhtTimer, sensors[nr].sensorTimer, true);
+    dhtInit = true;
+  }
+}
+
+void sensorDHTCallback(void *pArg) {
+  int nr = *((int *) pArg);
+
+  if (strcmp(sensors[nr].sensorBlink,"1") == 0) {
+    ledFlash(1,50);
+  }
+  int chk = DHT.read22(sensors[nr].sensorPin1);
+  Serial.print("DHTCheck=");
+  Serial.println(chk);
+
+  //dhtTempReading = dht.readTemperature();
+  dhtTempReading = DHT.temperature;
+  Serial.print("Temperature=");
+  Serial.println(dhtTempReading);
+  if ( dhtTempReading != -999 ) {
+    snprintf (temp,50,"%d.%02d", (int)dhtTempReading, abs((int)(dhtTempReading*100)%100));
+    snprintf (msg, 75, "%s %s", sensors[nr].sensorTopic1, temp);
+    Serial.print("Publish message: ");
+    Serial.println(msg);
+    client.publish(sensors[nr].sensorTopic1, temp, true);
+  }
+
+  //dhtHumReading = dht.readHumidity();
+  dhtHumReading=DHT.humidity;
+  Serial.print("Humidity=");
+  Serial.println(dhtHumReading);
+  if ( dhtHumReading != -999 ) {
+    snprintf (temp,50,"%d.%02d", (int)dhtHumReading, abs((int)(dhtHumReading*100)%100));
+    snprintf (msg, 75, "%s %s", sensors[nr].sensorTopic2, temp);
+    Serial.print("Publish message: ");
+    Serial.println(msg);
+    client.publish(sensors[nr].sensorTopic2, temp, true);
+  }
 }

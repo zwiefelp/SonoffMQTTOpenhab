@@ -121,7 +121,6 @@ void getConfiguration(char* cmd) {
         goto finish;
       }
 
-
       if (strcmp(ptr,"ledPin") == 0) {
         ptr = strtok(NULL, delimiter);
         strcpy(temp,ptr);

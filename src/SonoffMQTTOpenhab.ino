@@ -9,6 +9,7 @@
 #include <ArduinoOTA.h>
 #include <PubSubClient.h>
 #include <RCSwitch.h>
+#include "dht.h"
 //#include <map>
 #include <user_config.h>
 #include <config.h>
@@ -19,10 +20,15 @@ extern "C" {
   #include "user_interface.h"
 }
 
+#define DHTTYPE DHT22
+
 IPAddress broker(192,168,1,1);          // Address of the MQTT broker
 WiFiClient wificlient;
 PubSubClient client(wificlient);
 long id = ESP.getChipId();
+
+//DHT dht(14,DHTTYPE);
+
 
 struct Sensor sensors[10];
 struct Sonoff sonoffs[10];
@@ -170,6 +176,10 @@ void sensorLoop() {
     if(strcmp(sensors[i].sensorType,"RF") == 0) {
       sensorRF(i);
     }
+    if(strcmp(sensors[i].sensorType,"DHT") == 0) {
+      sensorDHT(i);
+    }
+
   }
 }
 
