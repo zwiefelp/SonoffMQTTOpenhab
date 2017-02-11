@@ -4,8 +4,13 @@ char temp[50];
 unsigned long btnTimer;
 bool btndwn = false;
 char* btnstate = "OFF";
+bool btnInit = false;
 
 void sensorBTN(int nr) {
+  if (!btnInit) {
+    pinMode(sensors[nr].sensorPin1, INPUT);
+    btnInit = true;
+  }
   if (digitalRead(sensors[nr].sensorPin1) == LOW && btndwn == false) {
     // Short Press
     btnToggleState(nr);
@@ -48,7 +53,7 @@ void sensorTemp(int nr) {
     Serial.print(sensors[nr].sensorPin1);
     Serial.print(" Timer=");
     Serial.println(sensors[nr].sensorTimer);
-
+    pinMode(sensors[nr].sensorPin1, INPUT);
     //void os_timer_setfn(os_timer_t *pTimer, os_timer_func_t *pFunction, void *pArg)
     os_timer_setfn(&tempTimer, sensorTempCallback, &nr);
     //void os_timer_arm(os_timer_t *pTimer, uint32_t milliseconds, bool repeat)
@@ -68,8 +73,14 @@ void sensorTempCallback(void *pArg) {
 
 os_timer_t pirTimer;
 bool pirDetect = false;
+bool pirInit = false;
 
 void sensorPIR(int nr) {
+  if (!pirInit) {
+    pinMode(sensors[nr].sensorPin1, INPUT);
+    pirInit = true;
+  }
+
   if ( digitalRead(sensors[nr].sensorPin1) == HIGH && !pirDetect ) {
     os_timer_disarm(&pirTimer);
     snprintf (msg, 75, "%s %s", sensors[nr].sensorTopic1, "ON");
@@ -111,6 +122,7 @@ void sensorRF(int nr) {
     Serial.print(sensors[nr].sensorPin1);
     Serial.print(" Timer=");
     Serial.println(sensors[nr].sensorTimer);
+    pinMode(sensors[nr].sensorPin1, INPUT);
     rfRec.enableReceive(sensors[nr].sensorPin1);
     rfInit = true;
   }
@@ -145,9 +157,7 @@ void sensorRF(int nr) {
 
 bool dhtInit = false;
 os_timer_t dhtTimer;
-double dhtTempReading = 0;
-double dhtHumReading = 0;
-dht DHT;
+unsigned long dhtTimer1 = millis();
 
 void sensorDHT(int nr) {
   if (!dhtInit) {
@@ -155,44 +165,52 @@ void sensorDHT(int nr) {
     Serial.print(sensors[nr].sensorPin1);
     Serial.print(" Timer=");
     Serial.println(sensors[nr].sensorTimer);
-    //dht((uint8_t)sensors[nr].sensorPin1, DHTTYPE);
+    //pinMode(sensors[nr].sensorPin1,INPUT_PULLUP);
 
     //void os_timer_setfn(os_timer_t *pTimer, os_timer_func_t *pFunction, void *pArg)
-    os_timer_setfn(&dhtTimer, sensorDHTCallback, &nr);
+    //os_timer_setfn(&dhtTimer, sensorDHTCallback, &nr);
     //void os_timer_arm(os_timer_t *pTimer, uint32_t milliseconds, bool repeat)
-    os_timer_arm(&dhtTimer, sensors[nr].sensorTimer, true);
+    //os_timer_arm(&dhtTimer, sensors[nr].sensorTimer, true);
     dhtInit = true;
+  }
+  if (millis() - dhtTimer1 >= sensors[nr].sensorTimer) {
+    sensorDHTCallback(nr);
+    dhtTimer1 = millis();
   }
 }
 
-void sensorDHTCallback(void *pArg) {
-  int nr = *((int *) pArg);
+//void sensorDHTCallback(void *pArg) {
+void sensorDHTCallback(int nr) {
+  double dhtTempReading = 0;
+  double dhtHumReading = 0;
+  dht DHT;
+  //int nr = *((int *) pArg);
 
   if (strcmp(sensors[nr].sensorBlink,"1") == 0) {
     ledFlash(1,50);
   }
   int chk = DHT.read22(sensors[nr].sensorPin1);
-  Serial.print("DHTCheck=");
+/*
+  Serial.print("DHT on Pin=");
+  Serial.print(sensors[nr].sensorPin1);
+  Serial.print(" read, Check=");
   Serial.println(chk);
+*/
 
-  //dhtTempReading = dht.readTemperature();
-  dhtTempReading = DHT.temperature;
-  Serial.print("Temperature=");
-  Serial.println(dhtTempReading);
-  if ( dhtTempReading != -999 ) {
-    snprintf (temp,50,"%d.%02d", (int)dhtTempReading, abs((int)(dhtTempReading*100)%100));
+  if ( chk == DHTLIB_OK ) {
+//    Serial.print("Temperature=");
+//    Serial.println(DHT.temperature, 1);
+    dhtTempReading = DHT.temperature;
+    snprintf (temp,50,"%d.%01d", (int)dhtTempReading, abs((int)(dhtTempReading*10)%10));
     snprintf (msg, 75, "%s %s", sensors[nr].sensorTopic1, temp);
     Serial.print("Publish message: ");
     Serial.println(msg);
     client.publish(sensors[nr].sensorTopic1, temp, true);
-  }
 
-  //dhtHumReading = dht.readHumidity();
-  dhtHumReading=DHT.humidity;
-  Serial.print("Humidity=");
-  Serial.println(dhtHumReading);
-  if ( dhtHumReading != -999 ) {
-    snprintf (temp,50,"%d.%02d", (int)dhtHumReading, abs((int)(dhtHumReading*100)%100));
+//    Serial.print("Humidity=");
+//    Serial.println(DHT.humidity, 1);
+    dhtHumReading=DHT.humidity;
+    snprintf (temp,50,"%d.%01d", (int)dhtHumReading, abs((int)(dhtHumReading*10)%10));
     snprintf (msg, 75, "%s %s", sensors[nr].sensorTopic2, temp);
     Serial.print("Publish message: ");
     Serial.println(msg);

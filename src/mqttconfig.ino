@@ -107,7 +107,7 @@ void getConfiguration(char* cmd) {
         sensors[sensorcount].sensorPin1 = strtol(temp, &ptr, 10);
         Serial.print("Received sensorPin1: ");
         Serial.println(sensors[sensorcount].sensorPin1);
-        pinMode(sensors[sensorcount].sensorPin1, INPUT);
+        //pinMode(sensors[sensorcount].sensorPin1, INPUT);
         goto finish;
       }
 
@@ -117,7 +117,7 @@ void getConfiguration(char* cmd) {
         sensors[sensorcount].sensorPin2 = strtol(temp, &ptr, 10);
         Serial.print("Received sensorPin2: ");
         Serial.println(sensors[sensorcount].sensorPin2);
-        pinMode(sensors[sensorcount].sensorPin2, INPUT);
+        //pinMode(sensors[sensorcount].sensorPin2, INPUT);
         goto finish;
       }
 
