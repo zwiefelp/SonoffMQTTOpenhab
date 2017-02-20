@@ -167,6 +167,9 @@ void sensorLoop() {
     if(strcmp(sensors[i].sensorType,"BTN") == 0) {
       sensorBTN(i);
     }
+    if(strcmp(sensors[i].sensorType,"TOGGLE") == 0) {
+      sensorTOGGLE(i);
+    }
     if(strcmp(sensors[i].sensorType,"TEMP") == 0) {
       sensorTemp(i);
     }

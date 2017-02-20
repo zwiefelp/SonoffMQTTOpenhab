@@ -43,6 +43,33 @@ void btnToggleState(int nr) {
   client.publish(sensors[nr].sensorTopic1, btnstate, true);
 }
 
+char* togglestate = "OFF";
+bool toggleon = false;
+bool toggleInit = false;
+
+void sensorTOGGLE(int nr) {
+  if (!toggleInit) {
+    pinMode(sensors[nr].sensorPin1, INPUT);
+    toggleInit = true;
+  }
+  if (digitalRead(sensors[nr].sensorPin1) == LOW && toggleon == false) {
+    toggleon = true;
+    togglestate = "ON";
+    snprintf (msg, 75, "%s %s", sensors[nr].sensorTopic1, btnstate);
+    Serial.print("Publish message: ");
+    Serial.println(msg);
+    client.publish(sensors[nr].sensorTopic1, btnstate, true);
+  }
+
+  if (digitalRead(sensors[nr].sensorPin1) == HIGH && toggleon == false) {
+    toggleon = false;
+    togglestate = "OFF";
+    Serial.print("Publish message: ");
+    Serial.println(msg);
+    client.publish(sensors[nr].sensorTopic1, btnstate, true);
+  }
+}
+
 bool tempInit = false;
 os_timer_t tempTimer;
 float tempReading = 0.0f;
@@ -157,7 +184,7 @@ void sensorRF(int nr) {
 
 bool dhtInit = false;
 os_timer_t dhtTimer;
-unsigned long dhtTimer1 = millis();
+unsigned long dhtTimer1 = 0;
 
 void sensorDHT(int nr) {
   if (!dhtInit) {
