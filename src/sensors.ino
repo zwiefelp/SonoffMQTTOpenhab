@@ -52,6 +52,7 @@ void sensorTOGGLE(int nr) {
     pinMode(sensors[nr].sensorPin1, INPUT);
     toggleInit = true;
   }
+
   if (digitalRead(sensors[nr].sensorPin1) == LOW && toggleon == false) {
     toggleon = true;
     togglestate = "ON";
@@ -116,6 +117,7 @@ void sensorPIR(int nr) {
     client.publish(sensors[nr].sensorTopic1, "ON", true);
     pirDetect = true;
   }
+
   if ( digitalRead(sensors[nr].sensorPin1) == LOW && pirDetect) {
     os_timer_disarm(&pirTimer);
     //void os_timer_setfn(os_timer_t *pTimer, os_timer_func_t *pFunction, void *pArg)
@@ -161,7 +163,7 @@ void sensorRF(int nr) {
       Serial.print("Unknown encoding");
     } else {
       newval = rfRec.getReceivedValue();
-      if ( lastval != newval || millis() - lastrec > sensors[nr].sensorTimer) {
+      if ( lastval != newval ) {
         snprintf (rfmsg, 20, "%li", newval);
         snprintf (msg, 75, "%s %s", sensors[nr].sensorTopic1, rfmsg);
         Serial.print("Publish message: ");
@@ -172,10 +174,18 @@ void sensorRF(int nr) {
         }
         lastval = newval;
         lastrec = millis();
-      } else {
-        if (millis() - lastrec > sensors[nr].sensorTimer) {
-          lastrec = 0;
+
+      } else if (millis() - lastrec > sensors[nr].sensorTimer) {
+        snprintf (rfmsg, 20, "%li", newval);
+        snprintf (msg, 75, "%s %s", sensors[nr].sensorTopic1, rfmsg);
+        Serial.print("Publish message: ");
+        Serial.println(msg);
+        client.publish(sensors[nr].sensorTopic1, rfmsg, true);
+        if (strcmp(sensors[nr].sensorBlink,"1") == 0) {
+          ledFlash(1,50);
         }
+        lastval = newval;
+        lastrec = millis();
       }
     }
     rfRec.resetAvailable();
@@ -194,10 +204,6 @@ void sensorDHT(int nr) {
     Serial.println(sensors[nr].sensorTimer);
     //pinMode(sensors[nr].sensorPin1,INPUT_PULLUP);
 
-    //void os_timer_setfn(os_timer_t *pTimer, os_timer_func_t *pFunction, void *pArg)
-    //os_timer_setfn(&dhtTimer, sensorDHTCallback, &nr);
-    //void os_timer_arm(os_timer_t *pTimer, uint32_t milliseconds, bool repeat)
-    //os_timer_arm(&dhtTimer, sensors[nr].sensorTimer, true);
     dhtInit = true;
   }
   if (millis() - dhtTimer1 >= sensors[nr].sensorTimer) {
@@ -206,27 +212,17 @@ void sensorDHT(int nr) {
   }
 }
 
-//void sensorDHTCallback(void *pArg) {
 void sensorDHTCallback(int nr) {
   double dhtTempReading = 0;
   double dhtHumReading = 0;
   dht DHT;
-  //int nr = *((int *) pArg);
 
   if (strcmp(sensors[nr].sensorBlink,"1") == 0) {
     ledFlash(1,50);
   }
   int chk = DHT.read22(sensors[nr].sensorPin1);
-/*
-  Serial.print("DHT on Pin=");
-  Serial.print(sensors[nr].sensorPin1);
-  Serial.print(" read, Check=");
-  Serial.println(chk);
-*/
 
   if ( chk == DHTLIB_OK ) {
-//    Serial.print("Temperature=");
-//    Serial.println(DHT.temperature, 1);
     dhtTempReading = DHT.temperature;
     snprintf (temp,50,"%d.%01d", (int)dhtTempReading, abs((int)(dhtTempReading*10)%10));
     snprintf (msg, 75, "%s %s", sensors[nr].sensorTopic1, temp);
@@ -234,8 +230,6 @@ void sensorDHTCallback(int nr) {
     Serial.println(msg);
     client.publish(sensors[nr].sensorTopic1, temp, true);
 
-//    Serial.print("Humidity=");
-//    Serial.println(DHT.humidity, 1);
     dhtHumReading=DHT.humidity;
     snprintf (temp,50,"%d.%01d", (int)dhtHumReading, abs((int)(dhtHumReading*10)%10));
     snprintf (msg, 75, "%s %s", sensors[nr].sensorTopic2, temp);
