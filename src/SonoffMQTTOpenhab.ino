@@ -27,9 +27,6 @@ WiFiClient wificlient;
 PubSubClient client(wificlient);
 long id = ESP.getChipId();
 
-//DHT dht(14,DHTTYPE);
-
-
 struct Sensor sensors[10];
 struct Sonoff sonoffs[10];
 //std::map <string, char> config;
