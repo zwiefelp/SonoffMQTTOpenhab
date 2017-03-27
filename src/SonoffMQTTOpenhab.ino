@@ -45,6 +45,7 @@ void setup() {
   //config[confTopic] = confTopic;
 
   WiFi.mode(WIFI_STA);
+  
   WiFi.begin(ssid, password);
   Serial.println("WiFi begun");
 
