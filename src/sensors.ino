@@ -4,95 +4,137 @@ char temp[50];
 unsigned long btnTimer;
 bool btndwn = false;
 char* btnstate = "OFF";
+bool btnInit = false;
 
-void sensorBTN() {
-  if (digitalRead(sensorPin) == LOW && btndwn == false) {
+void sensorBTN(int nr) {
+  if (!btnInit) {
+    pinMode(sensors[nr].sensorPin1, INPUT);
+    btnInit = true;
+  }
+  if (digitalRead(sensors[nr].sensorPin1) == LOW && btndwn == false) {
     // Short Press
-    btnToggleState();
+    btnToggleState(nr);
     btndwn = true;
     btnTimer = millis();
     delay(200);
   }
 
-  if (digitalRead(sensorPin) == LOW && btndwn == true && millis() - btnTimer > 500) {
+  if (digitalRead(sensors[nr].sensorPin1) == LOW && btndwn == true && millis() - btnTimer > 500) {
     // Long Press
   }
 
-  if (digitalRead(sensorPin) == HIGH && btndwn == true) {
+  if (digitalRead(sensors[nr].sensorPin1) == HIGH && btndwn == true) {
     // Btn Release
     btndwn = false;
     btnTimer = millis();
   }
 }
 
-void btnToggleState() {
+void btnToggleState(int nr) {
   if (strcmp(btnstate,"ON") == 0)  {
     btnstate = "OFF";
   } else {
     btnstate = "ON";
   }
 
-  snprintf (msg, 75, "%s %s", sensorTopic, btnstate);
+  snprintf (msg, 75, "%s %s", sensors[nr].sensorTopic1, btnstate);
   Serial.print("Publish message: ");
   Serial.println(msg);
-  client.publish(sensorTopic, btnstate, true);
+  client.publish(sensors[nr].sensorTopic1, btnstate, true);
+}
+
+char* togglestate = "OFF";
+bool toggleon = false;
+bool toggleInit = false;
+
+void sensorTOGGLE(int nr) {
+  if (!toggleInit) {
+    pinMode(sensors[nr].sensorPin1, INPUT);
+    toggleInit = true;
+  }
+
+  if (digitalRead(sensors[nr].sensorPin1) == LOW && toggleon == false) {
+    toggleon = true;
+    togglestate = "ON";
+    snprintf (msg, 75, "%s %s", sensors[nr].sensorTopic1, btnstate);
+    Serial.print("Publish message: ");
+    Serial.println(msg);
+    client.publish(sensors[nr].sensorTopic1, btnstate, true);
+  }
+
+  if (digitalRead(sensors[nr].sensorPin1) == HIGH && toggleon == false) {
+    toggleon = false;
+    togglestate = "OFF";
+    Serial.print("Publish message: ");
+    Serial.println(msg);
+    client.publish(sensors[nr].sensorTopic1, btnstate, true);
+  }
 }
 
 bool tempInit = false;
 os_timer_t tempTimer;
 float tempReading = 0.0f;
 
-void sensorTemp() {
+void sensorTemp(int nr) {
   if (!tempInit) {
     Serial.print("initialize Temp - Pin=");
-    Serial.print(sensorPin);
+    Serial.print(sensors[nr].sensorPin1);
     Serial.print(" Timer=");
-    Serial.println(sensorTimer);
-
+    Serial.println(sensors[nr].sensorTimer);
+    pinMode(sensors[nr].sensorPin1, INPUT);
     //void os_timer_setfn(os_timer_t *pTimer, os_timer_func_t *pFunction, void *pArg)
-    os_timer_setfn(&tempTimer, sensorTempCallback, NULL);
+    os_timer_setfn(&tempTimer, sensorTempCallback, &nr);
     //void os_timer_arm(os_timer_t *pTimer, uint32_t milliseconds, bool repeat)
-    os_timer_arm(&tempTimer, sensorTimer, true);
+    os_timer_arm(&tempTimer, sensors[nr].sensorTimer, true);
     tempInit = true;
   }
 }
 
 void sensorTempCallback(void *pArg) {
+  int nr = *((int *) pArg);
   snprintf (temp,50,"%.1f", tempReading);
-  snprintf (msg, 75, "%s %.1f", sensorTopic, tempReading);
+  snprintf (msg, 75, "%s %.1f", sensors[nr].sensorTopic1, tempReading);
   Serial.print("Publish message: ");
   Serial.println(msg);
-  client.publish(sensorTopic, temp, true);
+  client.publish(sensors[nr].sensorTopic1, temp, true);
 }
 
 os_timer_t pirTimer;
 bool pirDetect = false;
+bool pirInit = false;
 
-void sensorPIR() {
-  if ( digitalRead(sensorPin) == HIGH && !pirDetect ) {
+void sensorPIR(int nr) {
+  if (!pirInit) {
+    pinMode(sensors[nr].sensorPin1, INPUT);
+    pirInit = true;
+  }
+
+  if ( digitalRead(sensors[nr].sensorPin1) == HIGH && !pirDetect ) {
     os_timer_disarm(&pirTimer);
-    snprintf (msg, 75, "%s %s", sensorTopic, "ON");
+    snprintf (msg, 75, "%s %s", sensors[nr].sensorTopic1, "ON");
     Serial.print("Publish message: ");
     Serial.println(msg);
-    client.publish(sensorTopic, "ON", true);
+    client.publish(sensors[nr].sensorTopic1, "ON", true);
     pirDetect = true;
   }
-  if ( digitalRead(sensorPin) == LOW && pirDetect) {
+
+  if ( digitalRead(sensors[nr].sensorPin1) == LOW && pirDetect) {
     os_timer_disarm(&pirTimer);
     //void os_timer_setfn(os_timer_t *pTimer, os_timer_func_t *pFunction, void *pArg)
-    os_timer_setfn(&pirTimer, sensorPIRCallback, NULL);
+    os_timer_setfn(&pirTimer, sensorPIRCallback, &nr);
     //void os_timer_arm(os_timer_t *pTimer, uint32_t milliseconds, bool repeat)
-    os_timer_arm(&pirTimer, sensorTimer, false);
+    os_timer_arm(&pirTimer, sensors[nr].sensorTimer, false);
     pirDetect = false;
   }
 }
 
 void sensorPIRCallback(void *pArg) {
   os_timer_disarm(&pirTimer);
-  snprintf (msg, 75, "%s %s", sensorTopic, "OFF");
+  int nr = *((int *) pArg);
+  snprintf (msg, 75, "%s %s", sensors[nr].sensorTopic1, "OFF");
   Serial.print("Publish message: ");
   Serial.println(msg);
-  client.publish(sensorTopic, "OFF", true);
+  client.publish(sensors[nr].sensorTopic1, "OFF", true);
   pirDetect = false;
 }
 
@@ -103,13 +145,14 @@ unsigned long newval = 0;
 unsigned long lastrec = 0;
 char rfmsg[20];
 
-void sensorRF() {
+void sensorRF(int nr) {
   if (!rfInit) {
     Serial.print("initialize RF - Pin=");
-    Serial.print(sensorPin);
+    Serial.print(sensors[nr].sensorPin1);
     Serial.print(" Timer=");
-    Serial.println(sensorTimer);
-    rfRec.enableReceive(sensorPin);
+    Serial.println(sensors[nr].sensorTimer);
+    pinMode(sensors[nr].sensorPin1, INPUT);
+    rfRec.enableReceive(sensors[nr].sensorPin1);
     rfInit = true;
   }
   if (rfRec.available()) {
@@ -120,24 +163,78 @@ void sensorRF() {
       Serial.print("Unknown encoding");
     } else {
       newval = rfRec.getReceivedValue();
-      if ( lastval != newval || millis() - lastrec > sensorTimer) {
+      if ( lastval != newval ) {
         snprintf (rfmsg, 20, "%li", newval);
-        snprintf (msg, 75, "%s %s", sensorTopic, rfmsg);
+        snprintf (msg, 75, "%s %s", sensors[nr].sensorTopic1, rfmsg);
         Serial.print("Publish message: ");
         Serial.println(msg);
-        client.publish(sensorTopic, rfmsg, true);
-        if (strcmp(sensorBlink,"1") == 0) {
+        client.publish(sensors[nr].sensorTopic1, rfmsg, true);
+        if (strcmp(sensors[nr].sensorBlink,"1") == 0) {
           ledFlash(1,50);
         }
         lastval = newval;
         lastrec = millis();
-      } else {
-        if (millis() - lastrec > sensorTimer) {
-          lastrec = 0;
+
+      } else if (millis() - lastrec > sensors[nr].sensorTimer) {
+        snprintf (rfmsg, 20, "%li", newval);
+        snprintf (msg, 75, "%s %s", sensors[nr].sensorTopic1, rfmsg);
+        Serial.print("Publish message: ");
+        Serial.println(msg);
+        client.publish(sensors[nr].sensorTopic1, rfmsg, true);
+        if (strcmp(sensors[nr].sensorBlink,"1") == 0) {
+          ledFlash(1,50);
         }
+        lastval = newval;
+        lastrec = millis();
       }
     }
     rfRec.resetAvailable();
   }
+}
 
+bool dhtInit = false;
+os_timer_t dhtTimer;
+unsigned long dhtTimer1 = 0;
+
+void sensorDHT(int nr) {
+  if (!dhtInit) {
+    Serial.print("initialize DHT22 - Pin=");
+    Serial.print(sensors[nr].sensorPin1);
+    Serial.print(" Timer=");
+    Serial.println(sensors[nr].sensorTimer);
+    //pinMode(sensors[nr].sensorPin1,INPUT_PULLUP);
+
+    dhtInit = true;
+  }
+  if (millis() - dhtTimer1 >= sensors[nr].sensorTimer) {
+    sensorDHTCallback(nr);
+    dhtTimer1 = millis();
+  }
+}
+
+void sensorDHTCallback(int nr) {
+  double dhtTempReading = 0;
+  double dhtHumReading = 0;
+  dht DHT;
+
+  if (strcmp(sensors[nr].sensorBlink,"1") == 0) {
+    ledFlash(1,50);
+  }
+  int chk = DHT.read22(sensors[nr].sensorPin1);
+
+  if ( chk == DHTLIB_OK ) {
+    dhtTempReading = DHT.temperature;
+    snprintf (temp,50,"%d.%01d", (int)dhtTempReading, abs((int)(dhtTempReading*10)%10));
+    snprintf (msg, 75, "%s %s", sensors[nr].sensorTopic1, temp);
+    Serial.print("Publish message: ");
+    Serial.println(msg);
+    client.publish(sensors[nr].sensorTopic1, temp, true);
+
+    dhtHumReading=DHT.humidity;
+    snprintf (temp,50,"%d.%01d", (int)dhtHumReading, abs((int)(dhtHumReading*10)%10));
+    snprintf (msg, 75, "%s %s", sensors[nr].sensorTopic2, temp);
+    Serial.print("Publish message: ");
+    Serial.println(msg);
+    client.publish(sensors[nr].sensorTopic2, temp, true);
+  }
 }

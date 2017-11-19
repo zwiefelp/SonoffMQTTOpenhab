@@ -9,6 +9,7 @@
 #include <ArduinoOTA.h>
 #include <PubSubClient.h>
 #include <RCSwitch.h>
+#include "dht.h"
 //#include <map>
 #include <user_config.h>
 #include <config.h>
@@ -19,10 +20,15 @@ extern "C" {
   #include "user_interface.h"
 }
 
+#define DHTTYPE DHT22
+
 IPAddress broker(192,168,1,1);          // Address of the MQTT broker
 WiFiClient wificlient;
 PubSubClient client(wificlient);
 long id = ESP.getChipId();
+
+struct Sensor sensors[10];
+struct Sonoff sonoffs[10];
 //std::map <string, char> config;
 
 /**
@@ -33,12 +39,13 @@ void setup() {
   Serial.println("Booting");
   configured = false;
   confstage = 0;
-  cmdTopic[0]=0;
+  sonoffs[1].cmdTopic[0]=0;
   snprintf(client_id,20,"client-%li", id);
   snprintf(confTopic,50,"/openhab/configuration/%li",id);
   //config[confTopic] = confTopic;
 
   WiFi.mode(WIFI_STA);
+  
   WiFi.begin(ssid, password);
   Serial.println("WiFi begun");
 
@@ -84,12 +91,12 @@ void setup() {
   Serial.println(WiFi.localIP());
 
   /* Set up the outputs. LED is active-low */
-  pinMode(ledPin, OUTPUT);
-  pinMode(relayPin, OUTPUT);
-  digitalWrite(ledPin, HIGH);
-  digitalWrite(relayPin, LOW);
-  pinMode(btnPin, INPUT_PULLUP);
-  pinMode(sensorPin, INPUT);
+  pinMode(sonoffs[1].ledPin, OUTPUT);
+  pinMode(sonoffs[1].relayPin, OUTPUT);
+  digitalWrite(sonoffs[1].ledPin, HIGH);
+  digitalWrite(sonoffs[1].relayPin, LOW);
+  pinMode(sonoffs[1].btnPin, INPUT_PULLUP);
+  //pinMode(sensors[1].sensorPin, INPUT);
 
   /* Prepare MQTT client */
   client.setServer(broker, 1883);
@@ -97,7 +104,7 @@ void setup() {
 }
 
 void toggleState() {
-    if ( digitalRead(relayPin) == LOW ) {
+    if ( digitalRead(sonoffs[1].relayPin) == LOW ) {
       setState("ON");
     } else {
       setState("OFF");
@@ -106,35 +113,33 @@ void toggleState() {
 
 void setState(char* state) {
   if ( strcmp(state,"ON") == 0 ) {
-    digitalWrite(ledPin, LOW);      // LED is active-low, so this turns it on
-    digitalWrite(relayPin, HIGH);
+    digitalWrite(sonoffs[1].ledPin, LOW);      // LED is active-low, so this turns it on
+    digitalWrite(sonoffs[1].relayPin, HIGH);
   }
   if ( strcmp(state,"OFF") == 0) {
-    digitalWrite(ledPin, HIGH);     // LED is active-low, so this turns it off
-    digitalWrite(relayPin, LOW);
+    digitalWrite(sonoffs[1].ledPin, HIGH);     // LED is active-low, so this turns it off
+    digitalWrite(sonoffs[1].relayPin, LOW);
   }
-  snprintf (msg, 75, "%s %s", stateTopic, state);
+  snprintf (msg, 75, "%s %s", sonoffs[1].stateTopic, state);
   Serial.print("Publish message: ");
   Serial.println(msg);
-  client.publish(stateTopic, state, true);
+  client.publish(sonoffs[1].stateTopic, state, true);
 }
 
 void ledFlash(long rep, long del) {
-
-  int ledstate = digitalRead(ledPin);
-  digitalWrite(ledPin, HIGH);
+  int ledstate = digitalRead(sonoffs[1].ledPin);
+  digitalWrite(sonoffs[1].ledPin, HIGH);
   for (int i = 0; i < rep; i++) {
     delay(del);
-    digitalWrite(ledPin, LOW);
+    digitalWrite(sonoffs[1].ledPin, LOW);
     delay(del);
-    digitalWrite(ledPin, HIGH);
+    digitalWrite(sonoffs[1].ledPin, HIGH);
   }
-  digitalWrite(ledPin, ledstate);
-
+  digitalWrite(sonoffs[1].ledPin, ledstate);
 }
 
 void btnLoop() {
-  if (digitalRead(btnPin) == LOW && bd == false) {
+  if (digitalRead(sonoffs[1].btnPin) == LOW && bd == false) {
     if (configured) {
       toggleState();
     }
@@ -143,29 +148,39 @@ void btnLoop() {
     delay(200);
   }
 
-  if (digitalRead(btnPin) == LOW && bd == true && millis() - timer > 500) {
+  if (digitalRead(sonoffs[1].btnPin) == LOW && bd == true && millis() - timer > 500) {
     ledFlash(4,100);
     ESP.restart();
   }
 
-  if (digitalRead(btnPin) == HIGH && bd == true) {
+  if (digitalRead(sonoffs[1].btnPin) == HIGH && bd == true) {
     bd = false;
     timer = millis();
   }
 }
 
 void sensorLoop() {
-  if(strcmp(sensorType,"BTN") == 0) {
-    sensorBTN();
-  }
-  if(strcmp(sensorType,"TEMP") == 0) {
-    sensorTemp();
-  }
-  if(strcmp(sensorType,"PIR") == 0) {
-    sensorPIR();
-  }
-  if(strcmp(sensorType,"RF") == 0) {
-    sensorRF();
+  for (int i=1; i<=sensorcount; i++) {
+
+    if(strcmp(sensors[i].sensorType,"BTN") == 0) {
+      sensorBTN(i);
+    }
+    if(strcmp(sensors[i].sensorType,"TOGGLE") == 0) {
+      sensorTOGGLE(i);
+    }
+    if(strcmp(sensors[i].sensorType,"TEMP") == 0) {
+      sensorTemp(i);
+    }
+    if(strcmp(sensors[i].sensorType,"PIR") == 0) {
+      sensorPIR(i);
+    }
+    if(strcmp(sensors[i].sensorType,"RF") == 0) {
+      sensorRF(i);
+    }
+    if(strcmp(sensors[i].sensorType,"DHT") == 0) {
+      sensorDHT(i);
+    }
+
   }
 }
 
