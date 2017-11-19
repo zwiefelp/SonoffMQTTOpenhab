@@ -2,3 +2,4 @@
 .gcc-flags.json
 .pioenvs
 src/user_config.h
+.piolibdeps
