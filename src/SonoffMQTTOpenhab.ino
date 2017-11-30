@@ -36,7 +36,7 @@ struct Sonoff sonoffs[10];
  */
 void setup() {
   Serial.begin(115200);
-  Serial.println("Booting");
+  Serial.println("Booting V1.0");
   configured = false;
   confstage = 0;
   sonoffs[1].cmdTopic[0]=0;
@@ -45,7 +45,7 @@ void setup() {
   //config[confTopic] = confTopic;
 
   WiFi.mode(WIFI_STA);
-  
+
   WiFi.begin(ssid, password);
   Serial.println("WiFi begun");
 
