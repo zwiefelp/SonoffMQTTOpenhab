@@ -48,6 +48,9 @@ void setup() {
 
   WiFi.begin(ssid, password);
   Serial.println("WiFi begun");
+  Serial.print("Connecting to ");
+  Serial.print(ssid);
+  Serial.println("...");
 
   while (WiFi.waitForConnectResult() != WL_CONNECTED) {
     Serial.println("Connection Failed! Rebooting...");
