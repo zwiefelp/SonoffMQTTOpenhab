@@ -11,8 +11,8 @@
 #include <RCSwitch.h>
 #include "dht.h"
 //#include <map>
-#include <user_config.h>
-#include <config.h>
+// #include <user_config.h>
+#include "config.h"
 #include <stdio.h>
 #include <stdlib.h>
 

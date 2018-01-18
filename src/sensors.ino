@@ -231,6 +231,7 @@ void sensorDHTCallback(int nr) {
     client.publish(sensors[nr].sensorTopic1, temp, true);
 
     dhtHumReading=DHT.humidity;
+    if ( dhtHumReading > 100 ) { dhtHumReading = 100; }
     snprintf (temp,50,"%d.%01d", (int)dhtHumReading, abs((int)(dhtHumReading*10)%10));
     snprintf (msg, 75, "%s %s", sensors[nr].sensorTopic2, temp);
     Serial.print("Publish message: ");
