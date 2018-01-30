@@ -1,5 +1,5 @@
 /* Version */
-const char* version = "1.1";
+const char* version = "1.2 OTA";
 
 /* WiFi Settings */
 const char* ssid     = "OpenHAB";

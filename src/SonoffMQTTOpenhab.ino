@@ -36,7 +36,8 @@ struct Sonoff sonoffs[10];
  */
 void setup() {
   Serial.begin(115200);
-  Serial.println("Booting V1.0");
+  snprintf(msg,20,"Booting V%s", version);
+  Serial.println(msg);
   configured = false;
   confstage = 0;
   sonoffs[1].cmdTopic[0]=0;

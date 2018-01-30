@@ -18,6 +18,12 @@ void getConfiguration(char* cmd) {
     client.publish(confTopic ,temp, true);
   }
 
+  if ( strcmp(cmd,"getTopic") == 0 ) {
+    ledFlash(2,100);
+    snprintf(temp,50,"Topic: %s", sonoffs[1].stateTopic);
+    client.publish(confTopic ,temp, true);
+  }
+
   if ( strcmp(cmd,"getIP") == 0 ) {
     ledFlash(2,100);
     IPAddress ip = WiFi.localIP();
