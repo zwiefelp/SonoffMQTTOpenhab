@@ -38,6 +38,8 @@ void setup() {
   Serial.begin(115200);
   snprintf(msg,20,"Booting V%s", version);
   Serial.println(msg);
+  snprintf(msg,20,"ESP ID %li", id);
+  Serial.println(msg);
   configured = false;
   confstage = 0;
   sonoffs[1].cmdTopic[0]=0;
@@ -184,6 +186,12 @@ void sensorLoop() {
     if(strcmp(sensors[i].sensorType,"DHT") == 0) {
       sensorDHT(i);
     }
+    if(strcmp(sensors[i].sensorType,"MOISTURE") == 0) {
+      sensorMoist(i);
+    }
+    if(strcmp(sensors[i].sensorType,"BAT") == 0) {
+      sensorBat(i);
+    }
 
   }
 }
@@ -226,10 +234,22 @@ void loop() {
     client.loop();
   }
 
+  if (sleep) {
+    // Going to sleep (GPIO16 (D0) must be connected to RST)
+    delay(100);
+    Serial.print("Going into deep sleep for ");
+    Serial.print(sleeptime * 1e6);
+    Serial.println(" microseconds");
+    ESP.deepSleep(sleeptime * 1e6); // 20e6 is 20e6 microseconds
+  }
+
   btnLoop();
 
   if (configured) {
     sensorLoop();
+    if (sleeptime > 0 ) {
+      sleep = true;
+    }
   }
 
 }

@@ -5,6 +5,7 @@ unsigned long btnTimer;
 bool btndwn = false;
 char* btnstate = "OFF";
 bool btnInit = false;
+//ADC_MODE(ADC_VCC);
 
 void sensorBTN(int nr) {
   if (!btnInit) {
@@ -87,6 +88,7 @@ void sensorTemp(int nr) {
     //void os_timer_arm(os_timer_t *pTimer, uint32_t milliseconds, bool repeat)
     os_timer_arm(&tempTimer, sensors[nr].sensorTimer, true);
     tempInit = true;
+    sensorTempCallback(&nr);
   }
 }
 
@@ -193,7 +195,6 @@ void sensorRF(int nr) {
 }
 
 bool dhtInit = false;
-os_timer_t dhtTimer;
 unsigned long dhtTimer1 = 0;
 
 void sensorDHT(int nr) {
@@ -205,7 +206,9 @@ void sensorDHT(int nr) {
     //pinMode(sensors[nr].sensorPin1,INPUT_PULLUP);
 
     dhtInit = true;
+    sensorDHTCallback(nr);
   }
+
   if (millis() - dhtTimer1 >= sensors[nr].sensorTimer) {
     sensorDHTCallback(nr);
     dhtTimer1 = millis();
@@ -220,7 +223,13 @@ void sensorDHTCallback(int nr) {
   if (strcmp(sensors[nr].sensorBlink,"1") == 0) {
     ledFlash(1,50);
   }
+  Serial.println("Read DHT Sensor");
   int chk = DHT.read22(sensors[nr].sensorPin1);
+
+  if ( chk != DHTLIB_OK) {
+    Serial.println("Read DHT Sensor");
+    int chk = DHT.read22(sensors[nr].sensorPin1);
+  }
 
   if ( chk == DHTLIB_OK ) {
     dhtTempReading = DHT.temperature;
@@ -231,7 +240,7 @@ void sensorDHTCallback(int nr) {
     client.publish(sensors[nr].sensorTopic1, temp, true);
 
     dhtHumReading=DHT.humidity;
-    if ( dhtHumReading <= 100 && dhtHumReading >= 0 ) { 
+    if ( dhtHumReading <= 100 && dhtHumReading >= 0 ) {
       snprintf (temp,50,"%d.%01d", (int)dhtHumReading, abs((int)(dhtHumReading*10)%10));
       snprintf (msg, 75, "%s %s", sensors[nr].sensorTopic2, temp);
       Serial.print("Publish message: ");
@@ -239,4 +248,77 @@ void sensorDHTCallback(int nr) {
       client.publish(sensors[nr].sensorTopic2, temp, true);
     }
   }
+}
+
+// Moisture Sensor
+bool moistInit = false;
+unsigned long moistTimer1 = 0;
+
+void sensorMoist(int nr) {
+  if (!moistInit) {
+    Serial.print("initialize Moisture Sensor - Pin=");
+    Serial.print(sensors[nr].sensorPin1);
+    Serial.print(" Timer=");
+    Serial.println(sensors[nr].sensorTimer);
+    //pinMode(sensors[nr].sensorPin1,INPUT_PULLUP);
+    moistInit = true;
+    sensorMoistCallback(nr);
+  }
+
+  if (millis() - moistTimer1 >= sensors[nr].sensorTimer) {
+    sensorMoistCallback(nr);
+    moistTimer1 = millis();
+  }
+}
+
+void sensorMoistCallback(int nr) {
+  int moistValue = 0;
+
+  if (strcmp(sensors[nr].sensorBlink,"1") == 0) {
+    ledFlash(1,50);
+  }
+  moistValue = analogRead(sensors[nr].sensorPin1);
+  snprintf (temp,50,"%li", moistValue);
+  snprintf (msg, 75, "%s %s", sensors[nr].sensorTopic1, temp);
+  Serial.print("Publish message: ");
+  Serial.println(msg);
+  client.publish(sensors[nr].sensorTopic1, temp, true);
+}
+
+// Battery Voltage Sensor
+bool batInit = false;
+unsigned long batTimer1 = 0;
+
+void sensorBat(int nr) {
+  if (!batInit) {
+    //ADC_MODE(ADC_VCC);
+    Serial.print("initialize Battery Sensor - Pin=");
+    Serial.print(sensors[nr].sensorPin1);
+    Serial.print(" Timer=");
+    Serial.println(sensors[nr].sensorTimer);
+    //pinMode(sensors[nr].sensorPin1,INPUT_PULLUP);
+    batInit = true;
+    sensorBatCallback(nr);
+  }
+
+  if (millis() - batTimer1 >= sensors[nr].sensorTimer) {
+    sensorBatCallback(nr);
+    batTimer1 = millis();
+  }
+}
+
+void sensorBatCallback(int nr) {
+  int batValue = 0;
+
+  if (strcmp(sensors[nr].sensorBlink,"1") == 0) {
+    ledFlash(1,50);
+  }
+  Serial.println("Read Battery Sensor");
+  batValue = (analogRead(sensors[nr].sensorPin1) / 10.24);
+  //batValue = ESP.getVcc();
+  snprintf (temp,50,"%li", batValue);
+  snprintf (msg, 75, "%s %s", sensors[nr].sensorTopic1, temp);
+  Serial.print("Publish message: ");
+  Serial.println(msg);
+  client.publish(sensors[nr].sensorTopic1, temp, true);
 }

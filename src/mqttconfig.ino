@@ -155,6 +155,15 @@ void getConfiguration(char* cmd) {
         goto finish;
       }
 
+      if (strcmp(ptr,"sleeptime") == 0) {
+        ptr = strtok(NULL, delimiter);
+        strcpy(temp,ptr);
+        sleeptime = strtol(temp, &ptr, 10);
+        Serial.print("Received sleeptime: ");
+        Serial.println(sleeptime);
+        goto finish;
+      }
+
       if (strcmp(ptr,"EndConfig") == 0) {
         Serial.println("EndConfig");
         confstage = 4;

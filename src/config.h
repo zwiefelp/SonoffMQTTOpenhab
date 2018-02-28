@@ -1,5 +1,5 @@
 /* Version */
-const char* version = "1.2 OTA";
+const char* version = "1.4 OTA";
 
 /* WiFi Settings */
 const char* ssid     = "OpenHAB";
@@ -34,3 +34,5 @@ bool configured = false;
 bool bd;
 char client_id[20] = "";
 unsigned long timer;
+bool sleep = false;;
+unsigned long sleeptime = 0;
