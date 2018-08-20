@@ -1,5 +1,5 @@
 /* Version */
-const char* version = "1.4 OTA";
+const char* version = "1.5 OTA";
 
 /* WiFi Settings */
 const char* ssid     = "OpenHAB";
@@ -26,6 +26,7 @@ struct Sensor {
 
 /* Runtime Variables and Configuration*/
 char confTopic[50];
+char debugTopic[50];
 unsigned int confstage;
 int sensorcount = 1;
 int sonoffcount = 1;

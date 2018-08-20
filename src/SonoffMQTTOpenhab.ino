@@ -20,6 +20,7 @@ extern "C" {
   #include "user_interface.h"
 }
 
+//#define SERIAL_DEBUG
 #define DHTTYPE DHT22
 
 IPAddress broker(192,168,1,1);          // Address of the MQTT broker
@@ -35,16 +36,20 @@ struct Sonoff sonoffs[10];
  * Setup
  */
 void setup() {
-  Serial.begin(115200);
-  snprintf(msg,20,"Booting V%s", version);
-  Serial.println(msg);
-  snprintf(msg,20,"ESP ID %li", id);
-  Serial.println(msg);
+  #ifdef SERIAL_DEBUG
+    Serial.begin(115200);
+    snprintf(msg,20,"Booting V%s", version);
+    Serial.println(msg);
+    snprintf(msg,20,"ESP ID %li", id);
+    Serial.println(msg);
+  #endif
+
   configured = false;
   confstage = 0;
   sonoffs[1].cmdTopic[0]=0;
   snprintf(client_id,20,"client-%li", id);
   snprintf(confTopic,50,"/openhab/configuration/%li",id);
+  snprintf(debugTopic,50,"/openhab/debug/%li", id);
   //config[confTopic] = confTopic;
 
   WiFi.mode(WIFI_STA);
@@ -203,7 +208,6 @@ void loop() {
   ArduinoOTA.handle();
   if (WiFi.status() != WL_CONNECTED)
   {
-    ledFlash(2,100);
     Serial.print("Connecting to ");
     Serial.print(ssid);
     Serial.println("...");
@@ -212,6 +216,7 @@ void loop() {
     if (WiFi.waitForConnectResult() != WL_CONNECTED)
       return;
     Serial.println("WiFi connected");
+    ledFlash(2,100);
   }
 
   if (WiFi.status() == WL_CONNECTED) {
@@ -236,10 +241,13 @@ void loop() {
 
   if (sleep) {
     // Going to sleep (GPIO16 (D0) must be connected to RST)
-    delay(100);
+    snprintf(msg, 50, "Deep sleep for %li secs", sleeptime);
+    MQTTdebugPrint(msg);
+
     Serial.print("Going into deep sleep for ");
     Serial.print(sleeptime * 1e6);
     Serial.println(" microseconds");
+    delay(100);
     ESP.deepSleep(sleeptime * 1e6); // 20e6 is 20e6 microseconds
   }
 

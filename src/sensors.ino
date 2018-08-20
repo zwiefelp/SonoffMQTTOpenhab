@@ -296,7 +296,7 @@ void sensorBat(int nr) {
     Serial.print(sensors[nr].sensorPin1);
     Serial.print(" Timer=");
     Serial.println(sensors[nr].sensorTimer);
-    //pinMode(sensors[nr].sensorPin1,INPUT_PULLUP);
+    pinMode(sensors[nr].sensorPin1,INPUT);
     batInit = true;
     sensorBatCallback(nr);
   }
@@ -308,17 +308,40 @@ void sensorBat(int nr) {
 }
 
 void sensorBatCallback(int nr) {
+  #define VCC_ADJ 1.096
+  #define MIN_VOLTS 3.0
+  #define MAX_VOLTS 4.2
   int batValue = 0;
+  float volt = 0.0;
+  int raw = 0;
 
   if (strcmp(sensors[nr].sensorBlink,"1") == 0) {
     ledFlash(1,50);
   }
   Serial.println("Read Battery Sensor");
-  batValue = (analogRead(sensors[nr].sensorPin1) / 10.24);
-  //batValue = ESP.getVcc();
+
+  //volt = (float)ESP.getVcc()* VCC_ADJ
+  raw = analogRead(sensors[nr].sensorPin1);
+  volt = (raw / 1023.0) * MAX_VOLTS;
+  batValue = int((volt - MIN_VOLTS) / (MAX_VOLTS - MIN_VOLTS) * 100);
+  if (batValue < 0) { batValue = 0;}
+  if (batValue > 100) { batValue = 100; }
+  if (volt < 0 ) { volt = 0.0; }
+
   snprintf (temp,50,"%li", batValue);
   snprintf (msg, 75, "%s %s", sensors[nr].sensorTopic1, temp);
   Serial.print("Publish message: ");
   Serial.println(msg);
   client.publish(sensors[nr].sensorTopic1, temp, true);
+
+  if (sensors[nr].sensorTopic2) {
+    snprintf (temp,50,"%.4f", volt);
+    snprintf (msg, 75, "%s %s", sensors[nr].sensorTopic2, temp);
+    Serial.print("Publish message: ");
+    Serial.println(msg);
+    client.publish(sensors[nr].sensorTopic2, temp, true);
+
+    //snprintf (temp,50,"%li", raw);
+    //client.publish("/openhab/in/bett_raw/state", temp, true);
+  }
 }

@@ -48,7 +48,8 @@ void mqttReconnect() {
       Serial.println("connected..");
       snprintf(msg,50,"Startup %li - Version %s", id, version);
       ledFlash(2,100);
-      client.publish("/openhab/esp8266", msg);
+      //client.publish("/openhab/esp8266", msg);
+      MQTTdebugPrint(msg);
       if ( strlen(sonoffs[1].cmdTopic) != 0 ) {
         client.subscribe(sonoffs[1].cmdTopic);
       }
@@ -61,5 +62,13 @@ void mqttReconnect() {
       delay(5000);
     }
   }
+}
 
+/**
+ * Print Debug Output to Serial and/or MQTT
+**/
+void MQTTdebugPrint(char* msg) {
+  if (client.connected()) {
+    client.publish(debugTopic, msg);
+  }
 }
