@@ -273,7 +273,10 @@ void sensorMoist(int nr) {
 
 void sensorMoistCallback(int nr) {
   int moistValue = 0;
-
+  #define VALUEWET 400
+  #define VALUEDRY 800
+  int percValue = 0 ;
+  
   if (strcmp(sensors[nr].sensorBlink,"1") == 0) {
     ledFlash(1,50);
   }
@@ -283,6 +286,17 @@ void sensorMoistCallback(int nr) {
   Serial.print("Publish message: ");
   Serial.println(msg);
   client.publish(sensors[nr].sensorTopic1, temp, true);
+
+  if (sensors[nr].sensorTopic2) {
+    percValue = ((moistValue - VALUEDRY) / (VALUEWET - VALUEDRY)) * 100;
+    if (percValue > 100) { percValue = 100; }
+    if (percValue < 0 ) { percValue = 0; }
+    snprintf (temp,50,"%li", percValue);
+    snprintf (msg, 75, "%s %s", sensors[nr].sensorTopic2, temp);
+    Serial.print("Publish message: ");
+    Serial.println(msg);
+    client.publish(sensors[nr].sensorTopic2, temp, true);
+  }
 }
 
 // Battery Voltage Sensor
