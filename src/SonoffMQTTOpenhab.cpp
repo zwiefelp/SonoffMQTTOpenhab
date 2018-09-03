@@ -10,46 +10,72 @@
 #include <PubSubClient.h>
 #include <RCSwitch.h>
 #include "dht.h"
-//#include <map>
-// #include <user_config.h>
-#include "config.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include "config.h"
+#include "types.h"
+#include "SonoffMQTTOpenhab.h"
+#include "sensors.h"
+#include "mqttconfig.h"
+#include "Networking.h"
+
+IPAddress broker(192,168,1,1);          // Address of the MQTT broker
+WiFiClient wificlient;
+PubSubClient client(wificlient);
 
 extern "C" {
   #include "user_interface.h"
 }
 
-//#define SERIAL_DEBUG
-#define DHTTYPE DHT22
+char confTopic[50];
+char debugTopic[50];
+unsigned int confstage;
+int sensorcount;
+int sonoffcount;
+char msg[200];
+bool configured;
+bool bd;
+char client_id[20];
+unsigned long timer;
+bool sleep;
+unsigned long sleeptime;
+long espID;
 
-IPAddress broker(192,168,1,1);          // Address of the MQTT broker
-WiFiClient wificlient;
-PubSubClient client(wificlient);
-long id = ESP.getChipId();
-
-struct Sensor sensors[10];
 struct Sonoff sonoffs[10];
-//std::map <string, char> config;
+struct Sensor sensors[10];
+
+/* Version */
+const char* version = VERSION;
+
+/* WiFi Settings */
+const char* ssid     = SSID;
+const char* password = WIFIPASSWORD;
 
 /**
  * Setup
  */
 void setup() {
+  espID = ESP.getChipId();
+  sensorcount = 1;
+  sonoffcount = 1;
+  configured = false;
+  sleep = false;
+  sleeptime = 0;
+
   #ifdef SERIAL_DEBUG
     Serial.begin(115200);
     snprintf(msg,20,"Booting V%s", version);
     Serial.println(msg);
-    snprintf(msg,20,"ESP ID %li", id);
+    snprintf(msg,20,"ESP ID %li", espID);
     Serial.println(msg);
   #endif
 
   configured = false;
   confstage = 0;
   sonoffs[1].cmdTopic[0]=0;
-  snprintf(client_id,20,"client-%li", id);
-  snprintf(confTopic,50,"/openhab/configuration/%li",id);
-  snprintf(debugTopic,50,"/openhab/debug/%li", id);
+  snprintf(client_id,20,"client-%li", espID);
+  snprintf(confTopic,50,"/openhab/configuration/%li",espID);
+  snprintf(debugTopic,50,"/openhab/debug/%li", espID);
   //config[confTopic] = confTopic;
 
   WiFi.mode(WIFI_STA);
@@ -116,9 +142,9 @@ void setup() {
 
 void toggleState() {
     if ( digitalRead(sonoffs[1].relayPin) == LOW ) {
-      setState("ON");
+      setState((char *)"ON");
     } else {
-      setState("OFF");
+      setState((char *)"OFF");
     }
 }
 
@@ -227,11 +253,11 @@ void loop() {
 
   if (!configured) {
     if ( confstage == 0 ) {
-      getConfiguration("initialize");
+      getConfiguration((char *)"initialize");
     }
     if ( confstage == 4 ) {
       configured = true;
-      setState("OFF");
+      setState((char *)"OFF");
     }
   }
 

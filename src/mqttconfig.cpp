@@ -1,4 +1,14 @@
 #include <Arduino.h>
+#include <ESP8266WiFi.h>
+#include <PubSubClient.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include "config.h"
+#include "types.h"
+#include "SonoffMQTTOpenhab.h"
+#include "sensors.h"
+#include "mqttconfig.h"
+#include "Networking.h"
 
 void getConfiguration(char* cmd) {
   char delimiter[] = ":";
@@ -6,7 +16,7 @@ void getConfiguration(char* cmd) {
   char temp[50];
 
   if ( strcmp(cmd,"initialize") == 0 ) {
-    snprintf(msg,50,"getconfig:%i", id);
+    snprintf(msg,50,"getconfig:%li", espID);
     client.publish("/openhab/configuration",msg, true);
     confstage = 1;
     goto finish;

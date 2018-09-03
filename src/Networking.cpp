@@ -1,4 +1,12 @@
 #include <Arduino.h>
+#include <ESP8266WiFi.h>
+#include <PubSubClient.h>
+#include <stdlib.h>
+#include "config.h"
+#include "types.h"
+#include "SonoffMQTTOpenhab.h"
+#include "Networking.h"
+#include "mqttconfig.h"
 
 /**
  * MQTT callback to process messages
@@ -7,12 +15,12 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   char spayload[length];
   memcpy(spayload, payload, length);
   spayload[length] = '\0';
-  char topicfilter[50] = "";
+  //char topicfilter[50] = "";
 
   Serial.print("Message arrived [");
   Serial.print(topic);
   Serial.print("] ");
-  for (int i = 0; i < length; i++) {
+  for (unsigned int i = 0; i < length; i++) {
     Serial.print((char)payload[i]);
    }
   Serial.println();
@@ -25,14 +33,23 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   // Examine Command Message
   if (strcmp(topic,sonoffs[1].cmdTopic) == 0) {
     if ( strcmp(spayload,"ON") == 0) {
-      setState("ON");
+      setState((char *)"ON");
     }
     if( strcmp(spayload,"OFF") == 0 ) {
-      setState("OFF");
+      setState((char *)"OFF");
     }
     if( strcmp(spayload,"TOGGLE") == 0 ) {
       toggleState();
     }
+  }
+}
+
+/**
+ * Print Debug Output to Serial and/or MQTT
+**/
+void MQTTdebugPrint(char* msg) {
+  if (client.connected()) {
+    client.publish(debugTopic, msg);
   }
 }
 
@@ -46,7 +63,7 @@ void mqttReconnect() {
     // Attempt to connect
     if (client.connect(client_id)) {
       Serial.println("connected..");
-      snprintf(msg,50,"Startup %li - Version %s", id, version);
+      snprintf(msg,50,"Startup %li - Version %s", espID, version);
       ledFlash(2,100);
       //client.publish("/openhab/esp8266", msg);
       MQTTdebugPrint(msg);
@@ -64,11 +81,3 @@ void mqttReconnect() {
   }
 }
 
-/**
- * Print Debug Output to Serial and/or MQTT
-**/
-void MQTTdebugPrint(char* msg) {
-  if (client.connected()) {
-    client.publish(debugTopic, msg);
-  }
-}
