@@ -287,10 +287,21 @@ void sensorMoistCallback(int nr) {
   #define VALUEWET 400
   #define VALUEDRY 800
   int percValue = 0 ;
+  double valueDry = VALUEDRY;
+  double valueWet = VALUEWET;
   
   if (strcmp(sensors[nr].sensorBlink,"1") == 0) {
     ledFlash(1,50);
   }
+
+  if (sensors[nr].calibMin) {
+    valueDry = sensors[nr].calibMin;
+  }
+
+  if (sensors[nr].calibMax) {
+    valueWet = sensors[nr].calibMax;
+  }
+
   moistValue = analogRead(sensors[nr].sensorPin1);
   snprintf (temp,50,"%li", moistValue);
   snprintf (msg, 75, "%s %s", sensors[nr].sensorTopic1, temp);
@@ -299,7 +310,7 @@ void sensorMoistCallback(int nr) {
   client.publish(sensors[nr].sensorTopic1, temp, true);
 
   if (sensors[nr].sensorTopic2) {
-    percValue = ((moistValue - VALUEDRY) / (VALUEWET - VALUEDRY)) * 100;
+    percValue = int((moistValue - valueDry) / (valueWet - valueDry) * 100);
     if (percValue > 100) { percValue = 100; }
     if (percValue < 0 ) { percValue = 0; }
     snprintf (temp,50,"%i", percValue);
@@ -339,6 +350,16 @@ void sensorBatCallback(int nr) {
   int batValue = 0;
   float volt = 0.0;
   int raw = 0;
+  double minVolts = MIN_VOLTS;
+  double maxVolts = MAX_VOLTS;
+
+  if (sensors[nr].calibMin) {
+    minVolts = sensors[nr].calibMin;
+  }
+
+  if (sensors[nr].calibMax) {
+    maxVolts = sensors[nr].calibMax;
+  }
 
   if (strcmp(sensors[nr].sensorBlink,"1") == 0) {
     ledFlash(1,50);
@@ -348,7 +369,7 @@ void sensorBatCallback(int nr) {
   //volt = (float)ESP.getVcc()* VCC_ADJ
   raw = analogRead(sensors[nr].sensorPin1);
   volt = (raw / 1023.0) * MAX_VOLTS;
-  batValue = int((volt - MIN_VOLTS) / (MAX_VOLTS - MIN_VOLTS) * 100);
+  batValue = int((volt - minVolts) / (maxVolts - minVolts) * 100);
   if (batValue < 0) { batValue = 0;}
   if (batValue > 100) { batValue = 100; }
   if (volt < 0 ) { volt = 0.0; }

@@ -19,10 +19,6 @@
 #include "mqttconfig.h"
 #include "Networking.h"
 
-IPAddress broker(192,168,1,1);          // Address of the MQTT broker
-WiFiClient wificlient;
-PubSubClient client(wificlient);
-
 extern "C" {
   #include "user_interface.h"
 }
@@ -50,6 +46,10 @@ const char* version = VERSION;
 /* WiFi Settings */
 const char* ssid     = SSID;
 const char* password = WIFIPASSWORD;
+
+IPAddress broker(192,168,1,1);          // Address of the MQTT broker
+WiFiClient wificlient;
+PubSubClient client(wificlient);
 
 /**
  * Setup

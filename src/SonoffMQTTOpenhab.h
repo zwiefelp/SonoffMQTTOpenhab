@@ -17,9 +17,9 @@ extern const char* version;
 extern struct Sonoff sonoffs[10];
 extern struct Sensor sensors[10]; 
 
+extern WiFiClient wificlient;
+extern PubSubClient client;
+
 void ledFlash(long rep, long del);
 void toggleState();
 void setState(char* state);
-
-extern WiFiClient wificlient;
-extern PubSubClient client;

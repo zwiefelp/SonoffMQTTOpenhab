@@ -137,6 +137,24 @@ void getConfiguration(char* cmd) {
         goto finish;
       }
 
+      if (strcmp(ptr,"calibMin") == 0 ) {
+        ptr = strtok(NULL, delimiter);
+        strcpy(temp,ptr);
+        sensors[sensorcount].calibMin = strtod(temp, &ptr);
+        Serial.print("Received calibMin: ");
+        Serial.println(sensors[sensorcount].calibMin);
+        goto finish;
+      }
+
+       if (strcmp(ptr,"calibMax") == 0 ) {
+        ptr = strtok(NULL, delimiter);
+        strcpy(temp,ptr);
+        sensors[sensorcount].calibMax = strtod(temp, &ptr);
+        Serial.print("Received calibMax: ");
+        Serial.println(sensors[sensorcount].calibMax);
+        goto finish;
+      }
+
       if (strcmp(ptr,"ledPin") == 0) {
         ptr = strtok(NULL, delimiter);
         strcpy(temp,ptr);
