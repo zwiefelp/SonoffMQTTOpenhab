@@ -20,7 +20,7 @@ extern "C" {
   #include "user_interface.h"
 }
 
-//#define SERIAL_DEBUG
+#define SERIAL_DEBUG
 #define DHTTYPE DHT22
 
 IPAddress broker(192,168,1,1);          // Address of the MQTT broker

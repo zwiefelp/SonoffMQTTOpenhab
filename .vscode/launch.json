@@ -12,8 +12,8 @@
             "type": "platformio-debug",
             "request": "launch",
             "name": "PIO Debug",
-            "executable": "c:/Users/Peter Zwiefelhofer/Google Drive/Arduino/PlatformIOWorkspace/SonoffMQTTOpenhab/.pio/build/esp12e/firmware.elf",
-            "toolchainBinDir": "C:/Users/Peter Zwiefelhofer/.platformio/packages/toolchain-xtensa/bin",
+            "executable": "c:/Users/pzwieGoogle Drive/Arduino/PlatformIOWorkspace/SonoffMQTTOpenhab/.pio/build/esp12e/firmware.elf",
+            "toolchainBinDir": "C:/Users/pzwie/.platformio/packages/toolchain-xtensa/bin",
             "preLaunchTask": {
                 "type": "PlatformIO",
                 "task": "Pre-Debug"
@@ -24,8 +24,8 @@
             "type": "platformio-debug",
             "request": "launch",
             "name": "PIO Debug (skip Pre-Debug)",
-            "executable": "c:/Users/Peter Zwiefelhofer/Google Drive/Arduino/PlatformIOWorkspace/SonoffMQTTOpenhab/.pio/build/esp12e/firmware.elf",
-            "toolchainBinDir": "C:/Users/Peter Zwiefelhofer/.platformio/packages/toolchain-xtensa/bin",
+            "executable": "c:/Users/pzwie/Google Drive/Arduino/PlatformIOWorkspace/SonoffMQTTOpenhab/.pio/build/esp12e/firmware.elf",
+            "toolchainBinDir": "C:/Users/pzwie/.platformio/packages/toolchain-xtensa/bin",
             "internalConsoleOptions": "openOnSessionStart"
         }
     ]

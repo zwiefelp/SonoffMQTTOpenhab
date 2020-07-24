@@ -3,3 +3,4 @@
 .pioenvs
 src/user_config.h
 .piolibdeps
+.pio/build
