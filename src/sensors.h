@@ -1,0 +1,14 @@
+void sensorBTN(int nr);
+void btnToggleState(int nr);
+void sensorTOGGLE(int nr);
+void sensorTemp(int nr);
+void sensorTempCallback(void *pArg);
+void sensorPIR(int nr);
+void sensorPIRCallback(void *pArg);
+void sensorRF(int nr);
+void sensorDHT(int nr);
+void sensorDHTCallback(int nr);
+void sensorMoist(int nr);
+void sensorMoistCallback(int nr);
+void sensorBat(int nr);
+void sensorBatCallback(int nr);
