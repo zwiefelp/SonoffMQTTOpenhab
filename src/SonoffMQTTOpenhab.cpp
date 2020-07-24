@@ -23,10 +23,6 @@ extern "C" {
   #include "user_interface.h"
 }
 
-<<<<<<< HEAD:src/SonoffMQTTOpenhab.ino
-#define SERIAL_DEBUG
-#define DHTTYPE DHT22
-=======
 char confTopic[50];
 char debugTopic[50];
 unsigned int confstage;
@@ -50,7 +46,6 @@ const char* version = VERSION;
 /* WiFi Settings */
 const char* ssid     = SSID;
 const char* password = WIFIPASSWORD;
->>>>>>> 2e4dc7ddcfb08afa1c9061a46a165684bc59bb95:src/SonoffMQTTOpenhab.cpp
 
 IPAddress broker(192,168,1,1);          // Address of the MQTT broker
 WiFiClient wificlient;

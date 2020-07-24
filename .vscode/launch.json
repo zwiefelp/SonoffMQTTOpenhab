@@ -12,7 +12,7 @@
             "type": "platformio-debug",
             "request": "launch",
             "name": "PIO Debug",
-            "executable": "c:/Users/pzwieGoogle Drive/Arduino/PlatformIOWorkspace/SonoffMQTTOpenhab/.pio/build/esp12e/firmware.elf",
+            "executable": "c:/Users/pzwie/Google Drive/Arduino/PlatformIOWorkspace/SonoffMQTTOpenhab/.pio/build/esp12e/firmware.elf",
             "toolchainBinDir": "C:/Users/pzwie/.platformio/packages/toolchain-xtensa/bin",
             "preLaunchTask": {
                 "type": "PlatformIO",
