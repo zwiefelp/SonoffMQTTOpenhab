@@ -36,7 +36,6 @@ unsigned long timer;
 bool sleep;
 unsigned long sleeptime;
 long espID;
-
 struct Sonoff sonoffs[10];
 struct Sensor sensors[10];
 
@@ -79,7 +78,6 @@ void setup() {
   //config[confTopic] = confTopic;
 
   WiFi.mode(WIFI_STA);
-
   WiFi.begin(ssid, password);
   Serial.println("WiFi begun");
   Serial.print("Connecting to ");
@@ -216,6 +214,9 @@ void sensorLoop() {
     }
     if(strcmp(sensors[i].sensorType,"DHT") == 0) {
       sensorDHT(i);
+    }
+    if(strcmp(sensors[i].sensorType,"BME") == 0) {
+      sensorBME(i);
     }
     if(strcmp(sensors[i].sensorType,"MOISTURE") == 0) {
       sensorMoist(i);

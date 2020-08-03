@@ -9,6 +9,8 @@
 #include "types.h"
 #include "SonoffMQTTOpenhab.h"
 #include "sensors.h"
+#include <Wire.h>                                                       // required by BME280 library
+#include <BME280_t.h>                                                   // import BME280 template library
 
 char temp[50];
 unsigned long btnTimer;
@@ -204,6 +206,8 @@ void sensorRF(int nr) {
   }
 }
 
+// DHT22 Temperature and Humidity Sensor
+
 bool dhtInit = false;
 unsigned long dhtTimer1 = 0;
 
@@ -260,6 +264,133 @@ void sensorDHTCallback(int nr) {
     }
   }
 }
+
+// BME280 Temperature, Humidity and Pressure Sensor
+
+bool BMEInit = false;
+bool BMEError = false;
+unsigned long BMETimer1 = 0;
+BME280<> BMESensor; 
+int sdaPin = 2;
+int sclPin = 1;
+
+void sensorBME(int nr) {
+  if (!BMEInit && !BMEError) {
+    Serial.print("initialize BME - Pin1=");
+    Serial.print(sensors[nr].sensorPin1);
+    Serial.print(" Pin2=");
+    Serial.print(sensors[nr].sensorPin2);
+
+    Serial.print(" Timer=");
+    Serial.println(sensors[nr].sensorTimer);
+    //pinMode(sensors[nr].sensorPin1,INPUT_PULLUP);
+    
+    // initialize I2C that connects to sensor
+    sdaPin = sensors[nr].sensorPin1;
+    sclPin = sensors[nr].sensorPin2;
+    Wire.begin(sdaPin, sclPin);
+    //Wire.begin(sensors[nr].sensorPin1, sensors[nr].sensorPin2);
+    //Wire.begin(2,1);
+    scani2c();
+
+    if (! BMESensor.begin()) {
+      Serial.println("Could not find a valid BME280 sensor, check wiring!");
+      BMEError = true;
+    } else {
+      BMEInit = true;
+      sensorBMECallback(nr);
+    }
+  }
+
+  if (millis() - BMETimer1 >= sensors[nr].sensorTimer && !BMEError) {
+    sensorBMECallback(nr);
+    BMETimer1 = millis();
+  }
+}
+
+void sensorBMECallback(int nr) {
+  double BMETempReading = 0;
+  double BMEHumReading = 0;
+  double BMEPressReading = 0;
+
+  if (strcmp(sensors[nr].sensorBlink,"1") == 0) {
+    ledFlash(1,50);
+  }
+  Serial.println("Read BME Sensor");
+  BMESensor.refresh();
+
+  Serial.print("Read Temperature: ");
+  Serial.println(BMESensor.temperature);
+  BMETempReading = BMESensor.temperature;
+  snprintf (temp,50,"%d.%01d", (int)BMETempReading, abs((int)(BMETempReading*10)%10));
+  snprintf (msg, 75, "%s %s", sensors[nr].sensorTopic1, temp);
+  Serial.print("Publish message: ");
+  Serial.println(msg);
+  client.publish(sensors[nr].sensorTopic1, temp, true);
+
+  Serial.print("Read Humidity: ");
+  Serial.println(BMESensor.humidity);
+  BMEHumReading=BMESensor.humidity;
+  if ( BMEHumReading <= 100 && BMEHumReading >= 0 ) {
+    snprintf (temp,50,"%d.%01d", (int)BMEHumReading, abs((int)(BMEHumReading*10)%10));
+    snprintf (msg, 75, "%s %s", sensors[nr].sensorTopic2, temp);
+    Serial.print("Publish message: ");
+    Serial.println(msg);
+    client.publish(sensors[nr].sensorTopic2, temp, true);
+  }
+
+  Serial.print("Read Pressure: ");
+  Serial.println(BMESensor.pressure);
+  BMEPressReading=BMESensor.pressure;
+}
+
+// Scan i2C
+
+void scani2c()
+{
+  byte error, address;
+  int nDevices;
+
+  Serial.println("Scanning...");
+
+  nDevices = 0;
+  for (address = 1; address < 127; address++)
+  {
+    // The i2c scanner uses the return value of
+    // the Write.endTransmisstion to see if
+    // a device did acknowledge to the address.
+    Wire.beginTransmission(address);
+    error = Wire.endTransmission();
+
+    if (error == 0)
+    {
+      Serial.print("I2C device found at address 0x");
+      if (address < 16) {
+        Serial.print("0");
+      }
+      Serial.print(address, HEX);
+      Serial.println(" !");
+
+      nDevices++;
+    }
+    else if (error == 4)
+    {
+      Serial.print("Unknown error at address 0x");
+      if (address < 16) {
+        Serial.print("0");
+      }
+      Serial.println(address, HEX);
+    }
+  }
+  if (nDevices == 0) {
+    Serial.println("No I2C devices found\n");
+  }
+  else {
+    Serial.println("Done.\n");
+  }
+
+}
+
 
 // Moisture Sensor
 bool moistInit = false;
