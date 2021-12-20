@@ -244,7 +244,7 @@ char* RCSwitch::getCodeWordB(int nAddressCode, int nChannelCode, boolean bStatus
 
    char* code[5] = { "FFFF", "0FFF", "F0FF", "FF0F", "FFF0" };
    if (nAddressCode < 1 || nAddressCode > 4 || nChannelCode < 1 || nChannelCode > 4) {
-    return '\0';
+    return NULL;
    }
    for (int i = 0; i<4; i++) {
      sReturn[nReturnPos++] = code[nAddressCode][i];
@@ -317,7 +317,7 @@ char* RCSwitch::getCodeWordC(char sFamily, int nGroup, int nDevice, boolean bSta
   int nReturnPos = 0;
 
   if ( (byte)sFamily < 97 || (byte)sFamily > 112 || nGroup < 1 || nGroup > 4 || nDevice < 1 || nDevice > 4) {
-    return '\0';
+    return NULL;
   }
 
   char* sDeviceGroupCode =  dec2binWzerofill(  (nDevice-1) + (nGroup-1)*4, 4  );
@@ -382,7 +382,7 @@ char* RCSwitch::getCodeWordD(char sGroup, int nDevice, boolean bStatus){
         case 'D':
             sGroupCode = dec2binWcharfill(1, 4, 'F'); break;
         default:
-            return '\0';
+            return NULL;
     }
 
     for (int i = 0; i<4; i++)
@@ -402,7 +402,7 @@ char* RCSwitch::getCodeWordD(char sGroup, int nDevice, boolean bStatus){
         case 3:
             sDevice = dec2binWcharfill(1, 3, 'F'); break;
         default:
-            return '\0';
+            return NULL;
     }
 
     for (int i = 0; i<3; i++)
@@ -672,12 +672,12 @@ unsigned int* RCSwitch::getReceivedRawdata() {
 
     if (code == 0){
         return false;
-    }else if (code != 0){
+    } else if (code != 0){
         return true;
     }
 
-
-}
+    return false;
+  }
 
 #ifdef ESP8266
  bool ICACHE_RAM_ATTR RCSwitch::receiveProtocol2(unsigned int changeCount) {
@@ -712,10 +712,10 @@ unsigned int* RCSwitch::getReceivedRawdata() {
 
     if (code == 0){
         return false;
-    }else if (code != 0){
+    } else if (code != 0){
         return true;
     }
-
+    return false;
 }
 
 /** Protocol 3 is used by BL35P02.
@@ -763,6 +763,7 @@ unsigned int* RCSwitch::getReceivedRawdata() {
       }else if (code != 0){
         return true;
       }
+      return false;
 }
 #ifdef ESP8266
   void ICACHE_RAM_ATTR RCSwitch::handleInterrupt() {
