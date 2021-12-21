@@ -1,3 +1,4 @@
+void drawText(char* text);
 void sensorBTN(int nr);
 void btnToggleState(int nr);
 void sensorTOGGLE(int nr);

@@ -174,6 +174,27 @@ void getConfiguration(char* cmd) {
         goto finish;
       }
 
+      if (strcmp(ptr,"display") == 0) {
+        ptr = strtok(NULL, delimiter);
+        strcpy(temp,ptr);
+        usedisplay= strtol(temp, &ptr, 10);
+        Serial.print("Received display: ");
+        Serial.println(usedisplay);
+      #ifdef DISPLAY
+        // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
+        if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { // Address 0x3D for 128x64
+          Serial.println(F("SSD1306 allocation failed"));
+          usedisplay = 0;
+        } else {
+        // Show initial display buffer contents on the screen --
+        // the library initializes this with an Adafruit splash screen.
+          Serial.println(F("SSD1306 allocated"));
+          display.display();
+        }
+      #endif 
+        goto finish;
+      }
+
       if (strcmp(ptr,"sonoff") == 0) {
         ptr = strtok(NULL, delimiter);
         strcpy(temp,ptr);

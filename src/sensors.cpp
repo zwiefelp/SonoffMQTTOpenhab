@@ -2,6 +2,10 @@
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 #include <RCSwitch.h>
+#include <SPI.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
 #include "dht.h"
 #include <stdlib.h>
 #include <os_type.h>
@@ -18,6 +22,14 @@ bool btndwn = false;
 char* btnstate = (char *)"OFF";
 bool btnInit = false;
 //ADC_MODE(ADC_VCC);
+
+void drawText(char* text, int line) {
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.setCursor(10, 10*line);
+  display.println(text);
+  display.display(); 
+}
 
 void sensorBTN(int nr) {
   if (!btnInit) {
@@ -242,7 +254,7 @@ void sensorDHTCallback(int nr) {
   chk = DHT.read22(sensors[nr].sensorPin1);
 
   if ( chk != DHTLIB_OK) {
-    Serial.println("Read DHT Sensor");
+    Serial.println("DHT not OK! Try again read DHT Sensor");
     chk = DHT.read22(sensors[nr].sensorPin1);
   }
 
@@ -262,6 +274,8 @@ void sensorDHTCallback(int nr) {
       Serial.println(msg);
       client.publish(sensors[nr].sensorTopic2, temp, true);
     }
+  } else {
+    Serial.println("Failed reading DHT Sensor");
   }
 }
 
@@ -449,6 +463,17 @@ void sensorMoistCallback(int nr) {
     Serial.print("Publish message: ");
     Serial.println(msg);
     client.publish(sensors[nr].sensorTopic2, temp, true);
+    
+    #ifdef DISPLAY
+    if (usedisplay == 1 ) {
+      display.clearDisplay();
+      drawText("Moisture Sensor",0);
+      snprintf (temp,50,"Raw: %li", moistValue);
+      drawText(temp,1);
+      snprintf (temp,50,"Perc: %i %%", percValue);
+      drawText(temp,2);
+    }
+    #endif
   }
 }
 

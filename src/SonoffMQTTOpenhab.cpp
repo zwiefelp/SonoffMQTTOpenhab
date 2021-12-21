@@ -9,6 +9,10 @@
 #include <ArduinoOTA.h>
 #include <PubSubClient.h>
 #include <RCSwitch.h>
+#include <SPI.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
 #include "dht.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,6 +23,7 @@
 #include "mqttconfig.h"
 #include "Networking.h"
 
+
 extern "C" {
   #include "user_interface.h"
 }
@@ -28,6 +33,7 @@ char debugTopic[50];
 unsigned int confstage;
 int sensorcount;
 int sonoffcount;
+int usedisplay;
 char msg[200];
 bool configured;
 bool bd;
@@ -50,6 +56,13 @@ IPAddress broker(192,168,1,1);          // Address of the MQTT broker
 WiFiClient wificlient;
 PubSubClient client(wificlient);
 
+#ifdef DISPLAY
+  #define SCREEN_WIDTH 128 // OLED display width, in pixels
+  #define SCREEN_HEIGHT 64 // OLED display height, in pixels
+  #define OLED_RESET    -1 // Reset pin # (or -1 if sharing Arduino reset pin)
+  Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+#endif 
+
 /**
  * Setup
  */
@@ -60,6 +73,7 @@ void setup() {
   configured = false;
   sleep = false;
   sleeptime = 0;
+  usedisplay = 0;
 
   #ifdef SERIAL_DEBUG
     Serial.begin(115200);

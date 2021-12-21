@@ -1,3 +1,4 @@
+#include <Adafruit_SSD1306.h>
 /* Runtime Variables and Configuration*/
 extern char confTopic[50];
 extern char debugTopic[50];
@@ -13,12 +14,14 @@ extern bool sleep;
 extern unsigned long sleeptime;
 extern long espID;
 extern const char* version;
+extern int usedisplay;
 
 extern struct Sonoff sonoffs[10];
 extern struct Sensor sensors[10]; 
 
 extern WiFiClient wificlient;
 extern PubSubClient client;
+extern Adafruit_SSD1306 display;
 
 void ledFlash(long rep, long del);
 void toggleState();
