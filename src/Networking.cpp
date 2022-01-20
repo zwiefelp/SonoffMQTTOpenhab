@@ -30,6 +30,12 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     getConfiguration(spayload);
   }
 
+  // Examine Sensor State Messages
+  if (confstage == 4) {
+    checkSensorState(topic, spayload);
+  }
+
+
   // Examine Command Message
   if (strcmp(topic,sonoffs[1].cmdTopic) == 0) {
     if ( strcmp(spayload,"ON") == 0) {
@@ -79,5 +85,24 @@ void mqttReconnect() {
       delay(5000);
     }
   }
+}
+
+void checkSensorState(char* stopic, char* msg) {
+    for (int i=1; i<=sensorcount; i++) {
+      if (strcmp(stopic,sensors[i].sensorTopic1) == 0 ) {
+        strcpy(sensors[i].sensorState1,msg);
+        Serial.print("Received sensorState1: ");
+        Serial.print(sensors[i].sensorTopic1);
+        Serial.print(" = ");
+        Serial.println(sensors[i].sensorState1);
+      }
+      if (strcmp(stopic,sensors[i].sensorTopic2) == 0 ) {
+        strcpy(sensors[i].sensorState2,msg);
+        Serial.print("Received sensorState2: ");
+        Serial.print(sensors[i].sensorTopic2);
+        Serial.print(" = ");
+        Serial.println(sensors[i].sensorState2);
+      }
+    }
 }
 

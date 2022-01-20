@@ -6,7 +6,7 @@
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
-#include "dht.h"
+#include "DHTStable.h"
 #include <stdlib.h>
 #include <os_type.h>
 #include "config.h"
@@ -16,13 +16,6 @@
 #include <Wire.h>                                                       // required by BME280 library
 #include <BME280_t.h>                                                   // import BME280 template library
 
-char temp[50];
-unsigned long btnTimer;
-bool btndwn = false;
-char* btnstate = (char *)"OFF";
-bool btnInit = false;
-//ADC_MODE(ADC_VCC);
-
 void drawText(char* text, int line) {
   display.setTextSize(1);
   display.setTextColor(WHITE);
@@ -31,11 +24,25 @@ void drawText(char* text, int line) {
   display.display(); 
 }
 
+char temp[50];
+unsigned long btnTimer;
+bool btndwn = false;
+bool btnInit = false;
+//ADC_MODE(ADC_VCC);
+
 void sensorBTN(int nr) {
   if (!btnInit) {
     pinMode(sensors[nr].sensorPin1, INPUT);
+    if (strcmp(sensors[nr].sensorState1,"ON") != 0) {
+      strcpy(sensors[nr].sensorState1,"OFF");
+    }
+    snprintf (msg, 75, "%s %s", sensors[nr].sensorTopic1, sensors[nr].sensorState1);
+    Serial.print("Publish message: ");
+    Serial.println(msg);
+    client.publish(sensors[nr].sensorTopic1, sensors[nr].sensorState1, true);
     btnInit = true;
   }
+
   if (digitalRead(sensors[nr].sensorPin1) == LOW && btndwn == false) {
     // Short Press
     btnToggleState(nr);
@@ -56,16 +63,33 @@ void sensorBTN(int nr) {
 }
 
 void btnToggleState(int nr) {
-  if (strcmp(btnstate,"ON") == 0)  {
-    btnstate = (char *)"OFF";
+  
+  if (strcmp(sensors[nr].sensorState2,"ON") == 0)  {
+    strcpy(sensors[nr].sensorState1,"OFF");
   } else {
-    btnstate = (char *)"ON";
+    strcpy(sensors[nr].sensorState1,"ON");
   }
 
-  snprintf (msg, 75, "%s %s", sensors[nr].sensorTopic1, btnstate);
+  snprintf (msg, 75, "%s %s", sensors[nr].sensorTopic1, sensors[nr].sensorState1);
   Serial.print("Publish message: ");
   Serial.println(msg);
-  client.publish(sensors[nr].sensorTopic1, btnstate, true);
+  client.publish(sensors[nr].sensorTopic1, sensors[nr].sensorState1, true);
+}
+
+bool ledinit = false;
+
+void sensorLED(int nr) {
+  if (!ledinit) {
+    pinMode(sensors[nr].sensorPin1, OUTPUT);
+    ledinit = true;
+  }
+
+  if (strcmp(sensors[nr].sensorState1,"ON") == 0)  {
+    digitalWrite(sensors[nr].sensorPin1, LOW);
+  } else {
+    digitalWrite(sensors[nr].sensorPin1, HIGH);
+  }
+
 }
 
 char* togglestate = (char *)"OFF";
@@ -81,18 +105,19 @@ void sensorTOGGLE(int nr) {
   if (digitalRead(sensors[nr].sensorPin1) == LOW && toggleon == false) {
     toggleon = true;
     togglestate = (char *)"ON";
-    snprintf (msg, 75, "%s %s", sensors[nr].sensorTopic1, btnstate);
+    snprintf (msg, 75, "%s %s", sensors[nr].sensorTopic1, togglestate);
     Serial.print("Publish message: ");
     Serial.println(msg);
-    client.publish(sensors[nr].sensorTopic1, btnstate, true);
+    client.publish(sensors[nr].sensorTopic1, togglestate, true);
   }
 
   if (digitalRead(sensors[nr].sensorPin1) == HIGH && toggleon == false) {
     toggleon = false;
     togglestate = (char *)"OFF";
+    snprintf (msg, 75, "%s %s", sensors[nr].sensorTopic1, togglestate);
     Serial.print("Publish message: ");
     Serial.println(msg);
-    client.publish(sensors[nr].sensorTopic1, btnstate, true);
+    client.publish(sensors[nr].sensorTopic1, togglestate, true);
   }
 }
 
@@ -244,7 +269,7 @@ void sensorDHT(int nr) {
 void sensorDHTCallback(int nr) {
   double dhtTempReading = 0;
   double dhtHumReading = 0;
-  dht DHT;
+  DHTStable DHT;
   int chk;
 
   if (strcmp(sensors[nr].sensorBlink,"1") == 0) {
@@ -253,20 +278,36 @@ void sensorDHTCallback(int nr) {
   Serial.println("Read DHT Sensor");
   chk = DHT.read22(sensors[nr].sensorPin1);
 
+  switch (chk)
+    {
+    case DHTLIB_OK:
+        Serial.println("OK,\t");
+        break;
+    case DHTLIB_ERROR_CHECKSUM:
+        Serial.println("Checksum error,\t");
+        break;
+    case DHTLIB_ERROR_TIMEOUT:
+        Serial.println("Time out error,\t");
+        break;
+    default:
+        Serial.println("Unknown error,\t");
+        break;
+    }
+
   if ( chk != DHTLIB_OK) {
     Serial.println("DHT not OK! Try again read DHT Sensor");
     chk = DHT.read22(sensors[nr].sensorPin1);
   }
 
   if ( chk == DHTLIB_OK ) {
-    dhtTempReading = DHT.temperature;
+    dhtTempReading = DHT.getTemperature();
     snprintf (temp,50,"%d.%01d", (int)dhtTempReading, abs((int)(dhtTempReading*10)%10));
     snprintf (msg, 75, "%s %s", sensors[nr].sensorTopic1, temp);
     Serial.print("Publish message: ");
     Serial.println(msg);
     client.publish(sensors[nr].sensorTopic1, temp, true);
 
-    dhtHumReading=DHT.humidity;
+    dhtHumReading=DHT.getHumidity();
     if ( dhtHumReading <= 100 && dhtHumReading >= 0 ) {
       snprintf (temp,50,"%d.%01d", (int)dhtHumReading, abs((int)(dhtHumReading*10)%10));
       snprintf (msg, 75, "%s %s", sensors[nr].sensorTopic2, temp);
@@ -285,8 +326,8 @@ bool BMEInit = false;
 bool BMEError = false;
 unsigned long BMETimer1 = 0;
 BME280<> BMESensor; 
-int sdaPin = 2;
-int sclPin = 1;
+int sdaPin = 4;
+int sclPin = 5;
 
 void sensorBME(int nr) {
   if (!BMEInit && !BMEError) {

@@ -11,6 +11,8 @@ struct Sonoff {
 struct Sensor {
   char sensorTopic1[50];
   char sensorTopic2[50];
+  char sensorState1[50];
+  char sensorState2[50];
   char sensorType[10];
   char sensorBlink[4];
   int sensorPin1 = 14;       // 14 = D5

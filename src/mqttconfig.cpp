@@ -80,6 +80,7 @@ void getConfiguration(char* cmd) {
         strcpy(sensors[sensorcount].sensorTopic1,ptr);
         Serial.print("Received sensorTopic1: ");
         Serial.println(sensors[sensorcount].sensorTopic1);
+        client.subscribe(sensors[sensorcount].sensorTopic1);
         goto finish;
       }
 
@@ -88,9 +89,18 @@ void getConfiguration(char* cmd) {
         strcpy(sensors[sensorcount].sensorTopic2,ptr);
         Serial.print("Received sensorTopic2: ");
         Serial.println(sensors[sensorcount].sensorTopic2);
+        client.subscribe(sensors[sensorcount].sensorTopic2);
         goto finish;
       }
 
+      if (strcmp(ptr,"sensorInitState") == 0 ) {
+        ptr = strtok(NULL, delimiter);
+        strcpy(sensors[sensorcount].sensorState1,ptr);
+        strcpy(sensors[sensorcount].sensorState2,ptr);
+        Serial.print("Received initState: ");
+        Serial.println(sensors[sensorcount].sensorState1);
+        goto finish;
+      }
 
       if (strcmp(ptr,"sensorType") == 0) {
         ptr = strtok(NULL, delimiter);
@@ -165,6 +175,26 @@ void getConfiguration(char* cmd) {
         goto finish;
       }
 
+      if (strcmp(ptr,"btnPin") == 0) {
+        ptr = strtok(NULL, delimiter);
+        strcpy(temp,ptr);
+        sonoffs[sonoffcount].btnPin = strtol(temp, &ptr, 10);
+        Serial.print("Received btnPin: ");
+        Serial.println(sonoffs[sonoffcount].btnPin);
+        pinMode(sonoffs[sonoffcount].btnPin, INPUT);
+        goto finish;
+      }
+
+      if (strcmp(ptr,"relayPin") == 0) {
+        ptr = strtok(NULL, delimiter);
+        strcpy(temp,ptr);
+        sonoffs[sonoffcount].relayPin = strtol(temp, &ptr, 10);
+        Serial.print("Received relayPin: ");
+        Serial.println(sonoffs[sonoffcount].relayPin);
+        pinMode(sonoffs[sonoffcount].relayPin, OUTPUT);
+        goto finish;
+      }
+
       if (strcmp(ptr,"sensor") == 0) {
         ptr = strtok(NULL, delimiter);
         strcpy(temp,ptr);
@@ -220,6 +250,5 @@ void getConfiguration(char* cmd) {
       }
     }
   }
-
   finish:;
 }

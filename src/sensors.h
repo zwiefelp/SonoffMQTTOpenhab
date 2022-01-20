@@ -1,6 +1,7 @@
 void drawText(char* text);
 void sensorBTN(int nr);
 void btnToggleState(int nr);
+void sensorLED(int nr);
 void sensorTOGGLE(int nr);
 void sensorTemp(int nr);
 void sensorTempCallback(void *pArg);

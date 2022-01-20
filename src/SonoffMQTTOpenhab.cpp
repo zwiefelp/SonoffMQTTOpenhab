@@ -13,7 +13,7 @@
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
-#include "dht.h"
+#include "DHTStable.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include "config.h"
@@ -78,6 +78,7 @@ void setup() {
   #ifdef SERIAL_DEBUG
     Serial.begin(115200);
     snprintf(msg,20,"Booting V%s", version);
+    Serial.println();
     Serial.println(msg);
     snprintf(msg,20,"ESP ID %li", espID);
     Serial.println(msg);
@@ -213,6 +214,9 @@ void sensorLoop() {
 
     if(strcmp(sensors[i].sensorType,"BTN") == 0) {
       sensorBTN(i);
+    }
+    if(strcmp(sensors[i].sensorType,"LED") == 0) {
+      sensorLED(i);
     }
     if(strcmp(sensors[i].sensorType,"TOGGLE") == 0) {
       sensorTOGGLE(i);
