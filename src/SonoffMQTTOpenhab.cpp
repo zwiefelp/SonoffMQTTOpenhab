@@ -10,9 +10,9 @@
 #include <PubSubClient.h>
 #include <RCSwitch.h>
 #include <SPI.h>
-#include <Wire.h>
-#include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h>
+//#include <Wire.h>
+//#include <Adafruit_GFX.h>
+//#include <Adafruit_SSD1306.h>
 #include "DHTStable.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -84,6 +84,16 @@ void setup() {
     Serial.println(msg);
   #endif
 
+  /* Set up the outputs. LED is active-low */
+  pinMode(sonoffs[1].ledPin, OUTPUT);
+  pinMode(sonoffs[1].relayPin, OUTPUT);
+  digitalWrite(sonoffs[1].ledPin, HIGH);
+  digitalWrite(sonoffs[1].relayPin, LOW);
+  pinMode(sonoffs[1].btnPin, INPUT_PULLUP);
+  //pinMode(sensors[1].sensorPin, INPUT);
+
+  ledFlash(4,100);
+
   configured = false;
   confstage = 0;
   sonoffs[1].cmdTopic[0]=0;
@@ -100,10 +110,12 @@ void setup() {
   Serial.println("...");
 
   while (WiFi.waitForConnectResult() != WL_CONNECTED) {
-    Serial.println("Connection Failed! Rebooting...");
-    delay(5000);
-    ESP.restart();
+    //Serial.println("Connection Failed! Rebooting...");
+    Serial.println("Connection Failed!");
+    //delay(5000);
+    //ESP.restart();
   }
+
   ledFlash(2,100);
   Serial.println("Proceeding");
 
@@ -139,14 +151,6 @@ void setup() {
   Serial.println("Ready");
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
-
-  /* Set up the outputs. LED is active-low */
-  pinMode(sonoffs[1].ledPin, OUTPUT);
-  pinMode(sonoffs[1].relayPin, OUTPUT);
-  digitalWrite(sonoffs[1].ledPin, HIGH);
-  digitalWrite(sonoffs[1].relayPin, LOW);
-  pinMode(sonoffs[1].btnPin, INPUT_PULLUP);
-  //pinMode(sensors[1].sensorPin, INPUT);
 
   /* Prepare MQTT client */
   client.setServer(broker, 1883);
@@ -233,9 +237,11 @@ void sensorLoop() {
     if(strcmp(sensors[i].sensorType,"DHT") == 0) {
       sensorDHT(i);
     }
+    /*
     if(strcmp(sensors[i].sensorType,"BME") == 0) {
       sensorBME(i);
     }
+    */
     if(strcmp(sensors[i].sensorType,"MOISTURE") == 0) {
       sensorMoist(i);
     }
@@ -267,6 +273,7 @@ void loop() {
   if (WiFi.status() == WL_CONNECTED) {
     if (!client.connected()) {
       mqttReconnect();
+      confstage = 0;
     }
   }
 

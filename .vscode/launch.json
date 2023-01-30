@@ -12,9 +12,9 @@
             "type": "platformio-debug",
             "request": "launch",
             "name": "PIO Debug",
-            "executable": "/Users/zwiefelhofer/Google Drive/Arduino/PlatformIOWorkspace/SonoffMQTTOpenhab/.pio/build/esp12e/firmware.elf",
+            "executable": "/home/pz/Repositories/SonoffMQTTOpenhab/.pio/build/esp12e/firmware.elf",
             "projectEnvName": "esp12e",
-            "toolchainBinDir": "/Users/zwiefelhofer/.platformio/packages/toolchain-xtensa/bin",
+            "toolchainBinDir": "/home/pz/.platformio/packages/toolchain-xtensa/bin",
             "internalConsoleOptions": "openOnSessionStart",
             "preLaunchTask": {
                 "type": "PlatformIO",
@@ -25,18 +25,18 @@
             "type": "platformio-debug",
             "request": "launch",
             "name": "PIO Debug (skip Pre-Debug)",
-            "executable": "/Users/zwiefelhofer/Google Drive/Arduino/PlatformIOWorkspace/SonoffMQTTOpenhab/.pio/build/esp12e/firmware.elf",
+            "executable": "/home/pz/Repositories/SonoffMQTTOpenhab/.pio/build/esp12e/firmware.elf",
             "projectEnvName": "esp12e",
-            "toolchainBinDir": "/Users/zwiefelhofer/.platformio/packages/toolchain-xtensa/bin",
+            "toolchainBinDir": "/home/pz/.platformio/packages/toolchain-xtensa/bin",
             "internalConsoleOptions": "openOnSessionStart"
         },
         {
             "type": "platformio-debug",
             "request": "launch",
             "name": "PIO Debug (without uploading)",
-            "executable": "/Users/zwiefelhofer/Google Drive/Arduino/PlatformIOWorkspace/SonoffMQTTOpenhab/.pio/build/esp12e/firmware.elf",
+            "executable": "/home/pz/Repositories/SonoffMQTTOpenhab/.pio/build/esp12e/firmware.elf",
             "projectEnvName": "esp12e",
-            "toolchainBinDir": "/Users/zwiefelhofer/.platformio/packages/toolchain-xtensa/bin",
+            "toolchainBinDir": "/home/pz/.platformio/packages/toolchain-xtensa/bin",
             "internalConsoleOptions": "openOnSessionStart",
             "loadMode": "manual"
         }

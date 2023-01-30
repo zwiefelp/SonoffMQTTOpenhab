@@ -1,4 +1,4 @@
-void drawText(char* text);
+//void drawText(char* text);
 void sensorBTN(int nr);
 void btnToggleState(int nr);
 void sensorLED(int nr);
@@ -10,8 +10,8 @@ void sensorPIRCallback(void *pArg);
 void sensorRF(int nr);
 void sensorDHT(int nr);
 void sensorDHTCallback(int nr);
-void sensorBME(int nr);
-void sensorBMECallback(int nr);
+//void sensorBME(int nr);
+//void sensorBMECallback(int nr);
 void sensorMoist(int nr);
 void sensorMoistCallback(int nr);
 void sensorBat(int nr);

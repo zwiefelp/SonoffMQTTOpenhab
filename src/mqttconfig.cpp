@@ -18,6 +18,7 @@ void getConfiguration(char* cmd) {
   if ( strcmp(cmd,"initialize") == 0 ) {
     snprintf(msg,50,"getconfig:%li", espID);
     client.publish("/openhab/configuration",msg, true);
+    Serial.println(msg);
     confstage = 1;
     goto finish;
   }

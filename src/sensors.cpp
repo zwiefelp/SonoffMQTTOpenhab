@@ -3,9 +3,9 @@
 #include <PubSubClient.h>
 #include <RCSwitch.h>
 #include <SPI.h>
-#include <Wire.h>
-#include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h>
+//#include <Wire.h>
+//#include <Adafruit_GFX.h>
+//#include <Adafruit_SSD1306.h>
 #include "DHTStable.h"
 #include <stdlib.h>
 #include <os_type.h>
@@ -13,9 +13,10 @@
 #include "types.h"
 #include "SonoffMQTTOpenhab.h"
 #include "sensors.h"
-#include <Wire.h>                                                       // required by BME280 library
-#include <BME280_t.h>                                                   // import BME280 template library
+//#include <Wire.h>                                                       // required by BME280 library
+//#include <BME280_t.h>                                                   // import BME280 template library
 
+#ifdef DISPLAY
 void drawText(char* text, int line) {
   display.setTextSize(1);
   display.setTextColor(WHITE);
@@ -23,6 +24,7 @@ void drawText(char* text, int line) {
   display.println(text);
   display.display(); 
 }
+#endif
 
 char temp[50];
 unsigned long btnTimer;
@@ -189,11 +191,30 @@ void sensorPIRCallback(void *pArg) {
   pirDetect = false;
 }
 
+
+/*
+* Code und Hilfsfunktionen für RF Receiver
+*
+*/
+unsigned char reverse(unsigned char b) {
+   b = (b & 0xF0) >> 4 | (b & 0x0F) << 4;
+   b = (b & 0xCC) >> 2 | (b & 0x33) << 2;
+   b = (b & 0xAA) >> 1 | (b & 0x55) << 1;
+   return b;
+}
+
+unsigned int transform(unsigned int val)
+{
+	return reverse( (val & 0xFF000000) >> 24 ) << 24 | reverse( (val & 0x00FF0000) >> 16 ) << 16 | 
+	reverse( (val & 0x0000FF00) >> 8 ) << 8 | reverse( val & 0x000000FF );
+	
+}
+
 bool rfInit = false;
 RCSwitch rfRec = RCSwitch();
-unsigned long lastval = 0;
-unsigned long newval = 0;
-unsigned long lastrec = 0;
+unsigned int lastval = 0;
+unsigned int newval = 0;
+unsigned int lastrec = 0;
 char rfmsg[20];
 
 void sensorRF(int nr) {
@@ -208,33 +229,41 @@ void sensorRF(int nr) {
   }
   if (rfRec.available()) {
 
-    int value = rfRec.getReceivedValue();
+    unsigned int value = rfRec.getReceivedValue();
+    unsigned int bitlen = rfRec.getReceivedBitlength();
+    unsigned int proto = rfRec.getReceivedProtocol();
 
     if (value == 0) {
       Serial.print("Unknown encoding");
     } else {
       newval = rfRec.getReceivedValue();
-      if ( lastval != newval ) {
-        snprintf (rfmsg, 20, "%li", newval);
-        snprintf (msg, 75, "%s %s", sensors[nr].sensorTopic1, rfmsg);
-        Serial.print("Publish message: ");
-        Serial.println(msg);
-        client.publish(sensors[nr].sensorTopic1, rfmsg, true);
-        if (strcmp(sensors[nr].sensorBlink,"1") == 0) {
-          ledFlash(1,50);
-        }
-        lastval = newval;
-        lastrec = millis();
 
-      } else if (millis() - lastrec > sensors[nr].sensorTimer) {
-        snprintf (rfmsg, 20, "%li", newval);
+      if ( (lastval != newval) || (millis() - lastrec > sensors[nr].sensorTimer) ) {
+        switch(bitlen) {
+          case 24: 
+            snprintf (rfmsg, 20, "%0.6X", newval); 
+            break;
+
+          default:
+            snprintf (rfmsg, 20, "%0.8X", transform(newval)); //convert to 32bit hex value and reverse bytes
+            break;
+        }
+        
         snprintf (msg, 75, "%s %s", sensors[nr].sensorTopic1, rfmsg);
         Serial.print("Publish message: ");
         Serial.println(msg);
         client.publish(sensors[nr].sensorTopic1, rfmsg, true);
+
+        snprintf (rfmsg, 20, "len=%i, proto=%i", bitlen, proto); 
+        snprintf (msg, 75, "%s %s", sensors[nr].sensorTopic2, rfmsg);
+        Serial.print("Publish message: ");
+        Serial.println(msg);
+        client.publish(sensors[nr].sensorTopic2, rfmsg, true);
+
         if (strcmp(sensors[nr].sensorBlink,"1") == 0) {
           ledFlash(1,50);
         }
+
         lastval = newval;
         lastrec = millis();
       }
@@ -321,7 +350,7 @@ void sensorDHTCallback(int nr) {
 }
 
 // BME280 Temperature, Humidity and Pressure Sensor
-
+/*
 bool BMEInit = false;
 bool BMEError = false;
 unsigned long BMETimer1 = 0;
@@ -445,7 +474,7 @@ void scani2c()
   }
 
 }
-
+*/
 
 // Moisture Sensor
 bool moistInit = false;
