@@ -21,6 +21,7 @@ extern struct Sensor sensors[10];
 
 extern WiFiClient wificlient;
 extern PubSubClient client;
+//extern AsyncWebServer server;
 //extern Adafruit_SSD1306 display;
 
 void ledFlash(long rep, long del);

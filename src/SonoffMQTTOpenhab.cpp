@@ -5,6 +5,9 @@
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
+#include <ESPAsyncTCP.h>
+#include <ESPAsyncWebServer.h>
+#include <WebSerial.h>
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
 #include <PubSubClient.h>
@@ -55,6 +58,7 @@ const char* password = WIFIPASSWORD;
 IPAddress broker(192,168,1,1);          // Address of the MQTT broker
 WiFiClient wificlient;
 PubSubClient client(wificlient);
+AsyncWebServer server(80);
 
 #ifdef DISPLAY
   #define SCREEN_WIDTH 128 // OLED display width, in pixels
@@ -116,9 +120,17 @@ void setup() {
     //ESP.restart();
   }
 
-  ledFlash(2,100);
-  Serial.println("Proceeding");
+  WebSerial.begin(&server);
+  server.begin();
 
+  ledFlash(2,100);
+  snprintf(msg,20,"Booting V%s", version);
+  WebSerial.println(msg);
+  snprintf(msg,20,"ESP ID %li", espID);
+  WebSerial.println(msg);
+  WebSerial.println("Proceeding");
+
+  Serial.println("Proceeding");
   // Port defaults to 8266
   // ArduinoOTA.setPort(8266);
 
@@ -148,9 +160,14 @@ void setup() {
     else if (error == OTA_END_ERROR    ) Serial.println("End Failed");
   });
   ArduinoOTA.begin();
+
   Serial.println("Ready");
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
+
+  WebSerial.println("Ready");
+  WebSerial.print("IP address: ");
+  WebSerial.println(WiFi.localIP());
 
   /* Prepare MQTT client */
   client.setServer(broker, 1883);
@@ -177,6 +194,8 @@ void setState(char* state) {
   snprintf (msg, 75, "%s %s", sonoffs[1].stateTopic, state);
   Serial.print("Publish message: ");
   Serial.println(msg);
+  WebSerial.print("Publish message: ");
+  WebSerial.println(msg);
   client.publish(sonoffs[1].stateTopic, state, true);
 }
 
@@ -279,10 +298,12 @@ void loop() {
 
   if (!configured) {
     if ( confstage == 0 ) {
+      WebSerial.println("Get Configuration...");
       getConfiguration((char *)"initialize");
     }
     if ( confstage == 4 ) {
       configured = true;
+      WebSerial.println("Configured...");
       setState((char *)"OFF");
     }
   }
