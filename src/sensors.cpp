@@ -27,13 +27,10 @@ void drawText(char* text, int line) {
 #endif
 
 char temp[50];
-unsigned long btnTimer;
-bool btndwn = false;
-bool btnInit = false;
 //ADC_MODE(ADC_VCC);
 
 void sensorBTN(int nr) {
-  if (!btnInit) {
+  if (!sensors[nr].init) {
     pinMode(sensors[nr].sensorPin1, INPUT);
     if (strcmp(sensors[nr].sensorState1,"ON") != 0) {
       strcpy(sensors[nr].sensorState1,"OFF");
@@ -42,25 +39,25 @@ void sensorBTN(int nr) {
     Serial.print("Publish message: ");
     Serial.println(msg);
     client.publish(sensors[nr].sensorTopic1, sensors[nr].sensorState1, true);
-    btnInit = true;
+    sensors[nr].init = true;
   }
 
-  if (digitalRead(sensors[nr].sensorPin1) == LOW && btndwn == false) {
+  if (digitalRead(sensors[nr].sensorPin1) == LOW && sensors[nr].active == false) {
     // Short Press
     btnToggleState(nr);
-    btndwn = true;
-    btnTimer = millis();
+    sensors[nr].active = true;
+    sensors[nr].stateTimer = millis();
     delay(200);
   }
 
-  if (digitalRead(sensors[nr].sensorPin1) == LOW && btndwn == true && millis() - btnTimer > 500) {
+  if (digitalRead(sensors[nr].sensorPin1) == LOW && sensors[nr].active == true && millis() - sensors[nr].stateTimer > 500) {
     // Long Press
   }
 
-  if (digitalRead(sensors[nr].sensorPin1) == HIGH && btndwn == true) {
+  if (digitalRead(sensors[nr].sensorPin1) == HIGH && sensors[nr].active == true) {
     // Btn Release
-    btndwn = false;
-    btnTimer = millis();
+    sensors[nr].active = false;
+    sensors[nr].stateTimer = millis();
   }
 }
 
@@ -78,12 +75,10 @@ void btnToggleState(int nr) {
   client.publish(sensors[nr].sensorTopic1, sensors[nr].sensorState1, true);
 }
 
-bool ledinit = false;
-
 void sensorLED(int nr) {
-  if (!ledinit) {
+  if (!sensors[nr].init) {
     pinMode(sensors[nr].sensorPin1, OUTPUT);
-    ledinit = true;
+    sensors[nr].init = true;
   }
 
   if (strcmp(sensors[nr].sensorState1,"ON") == 0)  {
@@ -94,18 +89,15 @@ void sensorLED(int nr) {
 
 }
 
-char* togglestate = (char *)"OFF";
-bool toggleon = false;
-bool toggleInit = false;
-
 void sensorTOGGLE(int nr) {
-  if (!toggleInit) {
+  char* togglestate;
+  if (!sensors[nr].init) {
     pinMode(sensors[nr].sensorPin1, INPUT);
-    toggleInit = true;
+    sensors[nr].init = true;
   }
 
-  if (digitalRead(sensors[nr].sensorPin1) == LOW && toggleon == false) {
-    toggleon = true;
+  if (digitalRead(sensors[nr].sensorPin1) == LOW && sensors[nr].active == false) {
+    sensors[nr].active = true;
     togglestate = (char *)"ON";
     snprintf (msg, 75, "%s %s", sensors[nr].sensorTopic1, togglestate);
     Serial.print("Publish message: ");
@@ -113,8 +105,8 @@ void sensorTOGGLE(int nr) {
     client.publish(sensors[nr].sensorTopic1, togglestate, true);
   }
 
-  if (digitalRead(sensors[nr].sensorPin1) == HIGH && toggleon == false) {
-    toggleon = false;
+  if (digitalRead(sensors[nr].sensorPin1) == HIGH && sensors[nr].active == false) {
+    sensors[nr].active = false;
     togglestate = (char *)"OFF";
     snprintf (msg, 75, "%s %s", sensors[nr].sensorTopic1, togglestate);
     Serial.print("Publish message: ");
@@ -152,43 +144,43 @@ void sensorTempCallback(void *pArg) {
   client.publish(sensors[nr].sensorTopic1, temp, true);
 }
 
-os_timer_t pirTimer;
-bool pirDetect = false;
-bool pirInit = false;
+os_timer_t pirTimer[10];   // ein Timer je Sensor-Slot
+int pirArg[10];            // stabiler Speicher fuer den Callback-Index
 
 void sensorPIR(int nr) {
-  if (!pirInit) {
+  if (!sensors[nr].init) {
     pinMode(sensors[nr].sensorPin1, INPUT);
-    pirInit = true;
+    pirArg[nr] = nr;
+    sensors[nr].init = true;
   }
 
-  if ( digitalRead(sensors[nr].sensorPin1) == HIGH && !pirDetect ) {
-    os_timer_disarm(&pirTimer);
+  if ( digitalRead(sensors[nr].sensorPin1) == HIGH && !sensors[nr].active ) {
+    os_timer_disarm(&pirTimer[nr]);
     snprintf (msg, 75, "%s %s", sensors[nr].sensorTopic1, "ON");
     Serial.print("Publish message: ");
     Serial.println(msg);
     client.publish(sensors[nr].sensorTopic1, "ON", true);
-    pirDetect = true;
+    sensors[nr].active = true;
   }
 
-  if ( digitalRead(sensors[nr].sensorPin1) == LOW && pirDetect) {
-    os_timer_disarm(&pirTimer);
+  if ( digitalRead(sensors[nr].sensorPin1) == LOW && sensors[nr].active) {
+    os_timer_disarm(&pirTimer[nr]);
     //void os_timer_setfn(os_timer_t *pTimer, os_timer_func_t *pFunction, void *pArg)
-    os_timer_setfn(&pirTimer, sensorPIRCallback, &nr);
+    os_timer_setfn(&pirTimer[nr], sensorPIRCallback, &pirArg[nr]);
     //void os_timer_arm(os_timer_t *pTimer, uint32_t milliseconds, bool repeat)
-    os_timer_arm(&pirTimer, sensors[nr].sensorTimer, false);
-    pirDetect = false;
+    os_timer_arm(&pirTimer[nr], sensors[nr].sensorTimer, false);
+    sensors[nr].active = false;
   }
 }
 
 void sensorPIRCallback(void *pArg) {
-  os_timer_disarm(&pirTimer);
   int nr = *((int *) pArg);
+  os_timer_disarm(&pirTimer[nr]);
   snprintf (msg, 75, "%s %s", sensors[nr].sensorTopic1, "OFF");
   Serial.print("Publish message: ");
   Serial.println(msg);
   client.publish(sensors[nr].sensorTopic1, "OFF", true);
-  pirDetect = false;
+  sensors[nr].active = false;
 }
 
 
@@ -210,6 +202,9 @@ unsigned int transform(unsigned int val)
 	
 }
 
+/* RF bleibt bewusst datei-global: RCSwitch nutzt einen statischen Interrupt-
+   Handler und unterstuetzt nur EINEN Empfaenger gleichzeitig. Mehrere RF-
+   Sensoren sind mit dieser Bibliothek ohnehin nicht moeglich. */
 bool rfInit = false;
 RCSwitch rfRec = RCSwitch();
 unsigned int lastval = 0;
@@ -274,24 +269,21 @@ void sensorRF(int nr) {
 
 // DHT22 Temperature and Humidity Sensor
 
-bool dhtInit = false;
-unsigned long dhtTimer1 = 0;
-
 void sensorDHT(int nr) {
-  if (!dhtInit) {
+  if (!sensors[nr].init) {
     Serial.print("initialize DHT22 - Pin=");
     Serial.print(sensors[nr].sensorPin1);
     Serial.print(" Timer=");
     Serial.println(sensors[nr].sensorTimer);
     //pinMode(sensors[nr].sensorPin1,INPUT_PULLUP);
 
-    dhtInit = true;
+    sensors[nr].init = true;
     sensorDHTCallback(nr);
   }
 
-  if (millis() - dhtTimer1 >= sensors[nr].sensorTimer) {
+  if (millis() - sensors[nr].stateTimer >= sensors[nr].sensorTimer) {
     sensorDHTCallback(nr);
-    dhtTimer1 = millis();
+    sensors[nr].stateTimer = millis();
   }
 }
 
@@ -477,23 +469,20 @@ void scani2c()
 */
 
 // Moisture Sensor
-bool moistInit = false;
-unsigned long moistTimer1 = 0;
-
 void sensorMoist(int nr) {
-  if (!moistInit) {
+  if (!sensors[nr].init) {
     Serial.print("initialize Moisture Sensor - Pin=");
     Serial.print(sensors[nr].sensorPin1);
     Serial.print(" Timer=");
     Serial.println(sensors[nr].sensorTimer);
     //pinMode(sensors[nr].sensorPin1,INPUT_PULLUP);
-    moistInit = true;
+    sensors[nr].init = true;
     sensorMoistCallback(nr);
   }
 
-  if (millis() - moistTimer1 >= sensors[nr].sensorTimer) {
+  if (millis() - sensors[nr].stateTimer >= sensors[nr].sensorTimer) {
     sensorMoistCallback(nr);
-    moistTimer1 = millis();
+    sensors[nr].stateTimer = millis();
   }
 }
 
@@ -548,24 +537,21 @@ void sensorMoistCallback(int nr) {
 }
 
 // Battery Voltage Sensor
-bool batInit = false;
-unsigned long batTimer1 = 0;
-
 void sensorBat(int nr) {
-  if (!batInit) {
+  if (!sensors[nr].init) {
     //ADC_MODE(ADC_VCC);
     Serial.print("initialize Battery Sensor - Pin=");
     Serial.print(sensors[nr].sensorPin1);
     Serial.print(" Timer=");
     Serial.println(sensors[nr].sensorTimer);
     pinMode(sensors[nr].sensorPin1,INPUT);
-    batInit = true;
+    sensors[nr].init = true;
     sensorBatCallback(nr);
   }
 
-  if (millis() - batTimer1 >= sensors[nr].sensorTimer) {
+  if (millis() - sensors[nr].stateTimer >= sensors[nr].sensorTimer) {
     sensorBatCallback(nr);
-    batTimer1 = millis();
+    sensors[nr].stateTimer = millis();
   }
 }
 

@@ -20,5 +20,10 @@ struct Sensor {
   unsigned long sensorTimer;
   double calibMin;
   double calibMax;
+  /* Per-Sensor-Laufzeitzustand (ersetzt die frueheren datei-globalen Flags,
+     damit sich mehrere Sensoren desselben Typs nicht gegenseitig stoeren) */
+  bool init = false;             // bisher btnInit/ledinit/toggleInit/pirInit/dhtInit/moistInit/batInit
+  bool active = false;           // bisher btndwn/toggleon/pirDetect
+  unsigned long stateTimer = 0;  // bisher btnTimer/dhtTimer1/moistTimer1/batTimer1
 };
 
