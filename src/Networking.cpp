@@ -15,7 +15,7 @@
  * MQTT callback to process messages
  */
 void mqttCallback(char* topic, byte* payload, unsigned int length) {
-  char spayload[length];
+  char spayload[length + 1];
   memcpy(spayload, payload, length);
   spayload[length] = '\0';
   //char topicfilter[50] = "";
