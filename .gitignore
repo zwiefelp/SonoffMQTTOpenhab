@@ -1,3 +1,5 @@
+.DS_Store
+src/config.h
 .clang_complete
 .gcc-flags.json
 .pioenvs

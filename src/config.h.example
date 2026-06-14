@@ -1,0 +1,12 @@
+/*
+ * Beispielkonfiguration.
+ * Kopieren nach src/config.h und Werte eintragen.
+ * src/config.h ist per .gitignore von der Versionierung ausgenommen
+ * und darf KEINE echten Zugangsdaten ins Repository bringen.
+ */
+#define SERIAL_DEBUG
+#define DHTTYPE DHT22
+#define VERSION "2.1 OTA"
+#define SSID "<WLAN-SSID>"
+#define WIFIPASSWORD "<WLAN-PASSWORT>"
+#undef DISPLAY
