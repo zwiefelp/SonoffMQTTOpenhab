@@ -524,7 +524,7 @@ void sensorMoistCallback(int nr) {
   Serial.println(msg);
   client.publish(sensors[nr].sensorTopic1, temp, true);
 
-  if (sensors[nr].sensorTopic2) {
+  if (strlen(sensors[nr].sensorTopic2) > 0) {
     percValue = int((moistValue - valueDry) / (valueWet - valueDry) * 100);
     if (percValue > 100) { percValue = 100; }
     if (percValue < 0 ) { percValue = 0; }
@@ -606,7 +606,7 @@ void sensorBatCallback(int nr) {
   Serial.println(msg);
   client.publish(sensors[nr].sensorTopic1, temp, true);
 
-  if (sensors[nr].sensorTopic2) {
+  if (strlen(sensors[nr].sensorTopic2) > 0) {
     snprintf (temp,50,"%.4f", volt);
     snprintf (msg, 75, "%s %s", sensors[nr].sensorTopic2, temp);
     Serial.print("Publish message: ");

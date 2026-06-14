@@ -106,7 +106,7 @@ void mqttReconnect() {
 void checkSensorState(char* stopic, char* msg) {
     for (int i=1; i<=sensorcount; i++) {
       if (strcmp(stopic,sensors[i].sensorTopic1) == 0 ) {
-        strcpy(sensors[i].sensorState1,msg);
+        strlcpy(sensors[i].sensorState1, msg, sizeof(sensors[i].sensorState1));
         Serial.print("Received sensorState1: ");
         Serial.print(sensors[i].sensorTopic1);
         Serial.print(" = ");
@@ -118,7 +118,7 @@ void checkSensorState(char* stopic, char* msg) {
         WebSerial.println(sensors[i].sensorState1);
       }
       if (strcmp(stopic,sensors[i].sensorTopic2) == 0 ) {
-        strcpy(sensors[i].sensorState2,msg);
+        strlcpy(sensors[i].sensorState2, msg, sizeof(sensors[i].sensorState2));
         Serial.print("Received sensorState2: ");
         Serial.print(sensors[i].sensorTopic2);
         Serial.print(" = ");
