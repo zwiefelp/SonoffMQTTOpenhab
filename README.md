@@ -63,7 +63,12 @@ flasht sie auf Wunsch per OTA vom Pi aus (`espota.py`):
 ```bash
 deploy/deploy-fw.sh                          # bauen und kopieren
 FLASH_IP=192.168.1.109 deploy/deploy-fw.sh   # zusätzlich auf dieses Board flashen
+PIO_ENV=esp12e deploy/deploy-fw.sh           # Profil für Module mit 4 MB Flash
 ```
+
+Build-Profile: `sonoff_s20` (1 MB Flash, Sonoff-Geräte) und `esp12e` (4 MB,
+z. B. Wemos D1 mini/NodeMCU). Die Flash-Größe eines Moduls zeigt
+`esptool.py --port /dev/ttyUSB0 flash_id`.
 
 Die IP eines Boards liefert `getIP` (siehe unten). Die Version kommt aus
 `VERSION` in `src/config.h`.
