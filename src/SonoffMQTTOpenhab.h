@@ -3,6 +3,7 @@
 extern char confTopic[50];
 extern char debugTopic[50];
 extern unsigned int confstage;
+extern unsigned long confRequestTs;
 extern int sensorcount;
 extern int sonoffcount;
 extern char msg[200];
@@ -24,5 +25,6 @@ extern PubSubClient client;
 //extern Adafruit_SSD1306 display;
 
 void ledFlash(long rep, long del);
+void wifiLoop();
 void toggleState();
 void setState(char* state);

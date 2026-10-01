@@ -20,6 +20,7 @@ void getConfiguration(char* cmd) {
     client.publish("/openhab/configuration",msg, true);
     Serial.println(msg);
     confstage = 1;
+    confRequestTs = millis();
     goto finish;
   }
 
@@ -55,12 +56,18 @@ void getConfiguration(char* cmd) {
   }
 
   if ( confstage == 1 ) {
+    // Jede Zeile verlaengert die Wartezeit bis zur erneuten Anfrage (CONFIG_RETRY_MS)
+    confRequestTs = millis();
     strlcpy(msg, cmd, sizeof(msg));
     ptr = strtok(msg, delimiter);
     if (ptr != NULL) {
+      // Zeilen ohne Wert (z. B. "cmdTopic:") ueberspringen: strtok liefert dann NULL,
+      // strlcpy/strtol darauf brachten das Board zum Absturz – mit erneuter Konfiguration
+      // nach dem Neustart eine Neustart-Schleife.
 
       if (strcmp(ptr,"cmdTopic") == 0) {
         ptr = strtok(NULL, delimiter);
+        if (ptr == NULL) goto finish;
         strlcpy(sonoffs[sonoffcount].cmdTopic, ptr, sizeof(sonoffs[sonoffcount].cmdTopic));
         Serial.print("Received cmdTopic: ");
         Serial.println(sonoffs[sonoffcount].cmdTopic);
@@ -70,6 +77,7 @@ void getConfiguration(char* cmd) {
 
       if (strcmp(ptr,"stateTopic") == 0) {
         ptr = strtok(NULL, delimiter);
+        if (ptr == NULL) goto finish;
         strlcpy(sonoffs[sonoffcount].stateTopic, ptr, sizeof(sonoffs[sonoffcount].stateTopic));
         Serial.print("Received stateTopic: ");
         Serial.println(sonoffs[sonoffcount].stateTopic);
@@ -78,6 +86,7 @@ void getConfiguration(char* cmd) {
 
       if (strcmp(ptr,"sensorTopic") == 0 || strcmp(ptr,"sensorTopic1") == 0) {
         ptr = strtok(NULL, delimiter);
+        if (ptr == NULL) goto finish;
         strlcpy(sensors[sensorcount].sensorTopic1, ptr, sizeof(sensors[sensorcount].sensorTopic1));
         Serial.print("Received sensorTopic1: ");
         Serial.println(sensors[sensorcount].sensorTopic1);
@@ -87,6 +96,7 @@ void getConfiguration(char* cmd) {
 
       if (strcmp(ptr,"sensorTopic2") == 0 ) {
         ptr = strtok(NULL, delimiter);
+        if (ptr == NULL) goto finish;
         strlcpy(sensors[sensorcount].sensorTopic2, ptr, sizeof(sensors[sensorcount].sensorTopic2));
         Serial.print("Received sensorTopic2: ");
         Serial.println(sensors[sensorcount].sensorTopic2);
@@ -96,6 +106,7 @@ void getConfiguration(char* cmd) {
 
       if (strcmp(ptr,"sensorInitState") == 0 ) {
         ptr = strtok(NULL, delimiter);
+        if (ptr == NULL) goto finish;
         strlcpy(sensors[sensorcount].sensorState1, ptr, sizeof(sensors[sensorcount].sensorState1));
         strlcpy(sensors[sensorcount].sensorState2, ptr, sizeof(sensors[sensorcount].sensorState2));
         Serial.print("Received initState: ");
@@ -105,6 +116,7 @@ void getConfiguration(char* cmd) {
 
       if (strcmp(ptr,"sensorType") == 0) {
         ptr = strtok(NULL, delimiter);
+        if (ptr == NULL) goto finish;
         strlcpy(sensors[sensorcount].sensorType, ptr, sizeof(sensors[sensorcount].sensorType));
         Serial.print("Received sensorType: ");
         Serial.println(sensors[sensorcount].sensorType);
@@ -113,6 +125,7 @@ void getConfiguration(char* cmd) {
 
       if (strcmp(ptr,"sensorBlink") == 0) {
         ptr = strtok(NULL, delimiter);
+        if (ptr == NULL) goto finish;
         strlcpy(sensors[sensorcount].sensorBlink, ptr, sizeof(sensors[sensorcount].sensorBlink));
         Serial.print("Received sensorBlink: ");
         Serial.println(sensors[sensorcount].sensorBlink);
@@ -121,6 +134,7 @@ void getConfiguration(char* cmd) {
 
       if (strcmp(ptr,"sensorTimer") == 0) {
         ptr = strtok(NULL, delimiter);
+        if (ptr == NULL) goto finish;
         strlcpy(temp, ptr, sizeof(temp));
         sensors[sensorcount].sensorTimer = strtol(temp,&ptr,10);
         Serial.print("Received sensorTimer: ");
@@ -130,6 +144,7 @@ void getConfiguration(char* cmd) {
 
       if (strcmp(ptr,"sensorPin") == 0 || strcmp(ptr,"sensorPin1") == 0) {
         ptr = strtok(NULL, delimiter);
+        if (ptr == NULL) goto finish;
         strlcpy(temp, ptr, sizeof(temp));
         sensors[sensorcount].sensorPin1 = strtol(temp, &ptr, 10);
         Serial.print("Received sensorPin1: ");
@@ -140,6 +155,7 @@ void getConfiguration(char* cmd) {
 
       if (strcmp(ptr,"sensorPin2") == 0 ) {
         ptr = strtok(NULL, delimiter);
+        if (ptr == NULL) goto finish;
         strlcpy(temp, ptr, sizeof(temp));
         sensors[sensorcount].sensorPin2 = strtol(temp, &ptr, 10);
         Serial.print("Received sensorPin2: ");
@@ -150,6 +166,7 @@ void getConfiguration(char* cmd) {
 
       if (strcmp(ptr,"calibMin") == 0 ) {
         ptr = strtok(NULL, delimiter);
+        if (ptr == NULL) goto finish;
         strlcpy(temp, ptr, sizeof(temp));
         sensors[sensorcount].calibMin = strtod(temp, &ptr);
         Serial.print("Received calibMin: ");
@@ -159,6 +176,7 @@ void getConfiguration(char* cmd) {
 
        if (strcmp(ptr,"calibMax") == 0 ) {
         ptr = strtok(NULL, delimiter);
+        if (ptr == NULL) goto finish;
         strlcpy(temp, ptr, sizeof(temp));
         sensors[sensorcount].calibMax = strtod(temp, &ptr);
         Serial.print("Received calibMax: ");
@@ -168,6 +186,7 @@ void getConfiguration(char* cmd) {
 
       if (strcmp(ptr,"ledPin") == 0) {
         ptr = strtok(NULL, delimiter);
+        if (ptr == NULL) goto finish;
         strlcpy(temp, ptr, sizeof(temp));
         sonoffs[sonoffcount].ledPin = strtol(temp, &ptr, 10);
         Serial.print("Received ledPin: ");
@@ -178,6 +197,7 @@ void getConfiguration(char* cmd) {
 
       if (strcmp(ptr,"btnPin") == 0) {
         ptr = strtok(NULL, delimiter);
+        if (ptr == NULL) goto finish;
         strlcpy(temp, ptr, sizeof(temp));
         sonoffs[sonoffcount].btnPin = strtol(temp, &ptr, 10);
         Serial.print("Received btnPin: ");
@@ -188,6 +208,7 @@ void getConfiguration(char* cmd) {
 
       if (strcmp(ptr,"relayPin") == 0) {
         ptr = strtok(NULL, delimiter);
+        if (ptr == NULL) goto finish;
         strlcpy(temp, ptr, sizeof(temp));
         sonoffs[sonoffcount].relayPin = strtol(temp, &ptr, 10);
         Serial.print("Received relayPin: ");
@@ -198,8 +219,15 @@ void getConfiguration(char* cmd) {
 
       if (strcmp(ptr,"sensor") == 0) {
         ptr = strtok(NULL, delimiter);
+        if (ptr == NULL) goto finish;
         strlcpy(temp, ptr, sizeof(temp));
-        sensorcount= strtol(temp, &ptr, 10);
+        // sensors[] hat 10 Plaetze, Index 0 bleibt ungenutzt → nur 1..9 annehmen
+        long n = strtol(temp, &ptr, 10);
+        if (n < 1 || n >= (long)(sizeof(sensors) / sizeof(sensors[0]))) {
+          MQTTdebugPrint((char *)"Config: sensor out of range 1..9, ignored");
+          goto finish;
+        }
+        sensorcount = n;
         Serial.print("Received sensor: ");
         Serial.println(sensorcount);
         goto finish;
@@ -207,6 +235,7 @@ void getConfiguration(char* cmd) {
 
       if (strcmp(ptr,"display") == 0) {
         ptr = strtok(NULL, delimiter);
+        if (ptr == NULL) goto finish;
         strlcpy(temp, ptr, sizeof(temp));
         usedisplay= strtol(temp, &ptr, 10);
         Serial.print("Received display: ");
@@ -228,8 +257,14 @@ void getConfiguration(char* cmd) {
 
       if (strcmp(ptr,"sonoff") == 0) {
         ptr = strtok(NULL, delimiter);
+        if (ptr == NULL) goto finish;
         strlcpy(temp, ptr, sizeof(temp));
-        sonoffcount= strtol(temp, &ptr, 10);
+        long n = strtol(temp, &ptr, 10);
+        if (n < 1 || n >= (long)(sizeof(sonoffs) / sizeof(sonoffs[0]))) {
+          MQTTdebugPrint((char *)"Config: sonoff out of range 1..9, ignored");
+          goto finish;
+        }
+        sonoffcount = n;
         Serial.print("Received sonoff: ");
         Serial.println(sonoffcount);
         goto finish;
@@ -237,6 +272,7 @@ void getConfiguration(char* cmd) {
 
       if (strcmp(ptr,"sleeptime") == 0) {
         ptr = strtok(NULL, delimiter);
+        if (ptr == NULL) goto finish;
         strlcpy(temp, ptr, sizeof(temp));
         sleeptime = strtol(temp, &ptr, 10);
         Serial.print("Received sleeptime: ");

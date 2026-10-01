@@ -28,9 +28,15 @@ extern "C" {
   #include "user_interface.h"
 }
 
+#define WIFI_SETUP_MS 20000    // so lange wartet setup() hoechstens aufs WLAN
+#define WIFI_RETRY_MS 30000    // Abstand der WLAN-Verbindungsversuche in loop()
+#define CONFIG_RETRY_MS 30000  // ohne (vollstaendige) Konfiguration erneut anfragen
+#define BTN_RESTART_MS 5000    // Taster so lange halten → Neustart
+
 char confTopic[50];
 char debugTopic[50];
 unsigned int confstage;
+unsigned long confRequestTs;
 int sensorcount;
 int sonoffcount;
 int usedisplay;
@@ -103,20 +109,24 @@ void setup() {
   //config[confTopic] = confTopic;
 
   WiFi.mode(WIFI_STA);
+  WiFi.setAutoReconnect(true);
   WiFi.begin(ssid, password);
   Serial.println("WiFi begun");
   Serial.print("Connecting to ");
   Serial.print(ssid);
   Serial.println("...");
 
-  while (WiFi.waitForConnectResult() != WL_CONNECTED) {
-    //Serial.println("Connection Failed! Rebooting...");
-    Serial.println("Connection Failed!");
-    //delay(5000);
-    //ESP.restart();
+  // Nicht endlos warten: ohne WLAN laeuft loop() trotzdem (Taster) und verbindet spaeter
+  unsigned long wifiStart = millis();
+  while (WiFi.status() != WL_CONNECTED && millis() - wifiStart < WIFI_SETUP_MS) {
+    delay(100);
   }
 
-  ledFlash(2,100);
+  if (WiFi.status() == WL_CONNECTED) {
+    ledFlash(2,100);
+  } else {
+    Serial.println("Connection Failed! Continuing without WiFi");
+  }
 
   Serial.println("Proceeding");
   // Port defaults to 8266
@@ -156,6 +166,33 @@ void setup() {
   /* Prepare MQTT client */
   client.setServer(broker, 1883);
   client.setCallback(mqttCallback);
+}
+
+/**
+ * WLAN-Verbindung pruefen, ohne zu blockieren. Das SDK verbindet selbst neu
+ * (setAutoReconnect); zusaetzlich alle WIFI_RETRY_MS ein neuer Versuch.
+ */
+void wifiLoop() {
+  static bool wasConnected = WiFi.status() == WL_CONNECTED;
+  static unsigned long lastAttempt = millis();
+
+  if (WiFi.status() == WL_CONNECTED) {
+    if (!wasConnected) {
+      Serial.println("WiFi connected");
+      ledFlash(2,100);
+    }
+    wasConnected = true;
+    return;
+  }
+
+  wasConnected = false;
+  if (millis() - lastAttempt >= WIFI_RETRY_MS) {
+    lastAttempt = millis();
+    Serial.print("Connecting to ");
+    Serial.print(ssid);
+    Serial.println("...");
+    WiFi.begin(ssid, password);
+  }
 }
 
 void toggleState() {
@@ -203,7 +240,7 @@ void btnLoop() {
     delay(200);
   }
 
-  if (digitalRead(sonoffs[1].btnPin) == LOW && bd == true && millis() - timer > 500) {
+  if (digitalRead(sonoffs[1].btnPin) == LOW && bd == true && millis() - timer > BTN_RESTART_MS) {
     ledFlash(4,100);
     ESP.restart();
   }
@@ -258,29 +295,25 @@ void sensorLoop() {
  */
 void loop() {
   ArduinoOTA.handle();
-  if (WiFi.status() != WL_CONNECTED)
-  {
-    Serial.print("Connecting to ");
-    Serial.print(ssid);
-    Serial.println("...");
-    WiFi.begin(ssid, password);
+  wifiLoop();
 
-    if (WiFi.waitForConnectResult() != WL_CONNECTED)
-      return;
-    Serial.println("WiFi connected");
-    ledFlash(2,100);
-  }
-
-  if (WiFi.status() == WL_CONNECTED) {
-    if (!client.connected()) {
-      mqttReconnect();
+  if (WiFi.status() == WL_CONNECTED && !client.connected()) {
+    // Konfiguration nur neu anfordern, solange keine vorliegt. Frueher wurde confstage nach
+    // jeder Neuverbindung auf 0 gesetzt und erreichte bei konfigurierten Boards nie wieder 4 –
+    // dann lief checkSensorState() nicht mehr.
+    if (mqttReconnect() && !configured) {
       confstage = 0;
     }
   }
 
   if (!configured) {
-    if ( confstage == 0 ) {
+    if ( confstage == 0 && client.connected() ) {
       getConfiguration((char *)"initialize");
+    }
+    // Keine oder unvollstaendige Antwort (openHAB nicht erreichbar, EndConfig verloren)
+    if ( confstage == 1 && millis() - confRequestTs > CONFIG_RETRY_MS ) {
+      MQTTdebugPrint((char *)"No complete configuration received, requesting again");
+      confstage = 0;
     }
     if ( confstage == 4 ) {
       configured = true;

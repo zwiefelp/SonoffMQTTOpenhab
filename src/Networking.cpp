@@ -60,32 +60,51 @@ void MQTTdebugPrint(char* msg) {
   }
 }
 
+#define MQTT_RETRY_MS 5000
+static unsigned long lastMqttAttempt = 0;
+
 /**
- * Attempt connection to MQTT broker and subscribe to command topic
+ * Alle Topics des Boards abonnieren. Nach jeder neuen Verbindung noetig: der Broker
+ * vergisst die Abos, sonst kaemen danach keine Sensorzustaende mehr an.
  */
-void mqttReconnect() {
-  // Loop until we're reconnected
-  while (!client.connected()) {
-    Serial.print("Attempting MQTT connection...");
-    // Attempt to connect
-    if (client.connect(client_id)) {
-      Serial.println("connected..");
-      snprintf(msg,50,"Startup %li - Version %s", espID, version);
-      ledFlash(2,100);
-      //client.publish("/openhab/esp8266", msg);
-      MQTTdebugPrint(msg);
-      if ( strlen(sonoffs[1].cmdTopic) != 0 ) {
-        client.subscribe(sonoffs[1].cmdTopic);
-      }
-      client.subscribe(confTopic);
-    } else {
-      Serial.print("failed, rc=");
-      Serial.print(client.state());
-      Serial.println(" try again in 5 seconds");
-      // Wait 5 seconds before retrying
-      delay(5000);
+void subscribeTopics() {
+  client.subscribe(confTopic);
+  if ( strlen(sonoffs[1].cmdTopic) != 0 ) {
+    client.subscribe(sonoffs[1].cmdTopic);
+  }
+  for (int i = 1; i <= sensorcount; i++) {
+    if ( strlen(sensors[i].sensorTopic1) != 0 ) {
+      client.subscribe(sensors[i].sensorTopic1);
+    }
+    if ( strlen(sensors[i].sensorTopic2) != 0 ) {
+      client.subscribe(sensors[i].sensorTopic2);
     }
   }
+}
+
+/**
+ * Ein Verbindungsversuch zum MQTT-Broker, hoechstens alle MQTT_RETRY_MS.
+ * Blockiert nicht, damit Taster und OTA auch ohne Broker funktionieren.
+ * Liefert true, wenn die Verbindung mit diesem Aufruf hergestellt wurde.
+ */
+bool mqttReconnect() {
+  if (lastMqttAttempt != 0 && millis() - lastMqttAttempt < MQTT_RETRY_MS) {
+    return false;
+  }
+  lastMqttAttempt = millis();
+  Serial.print("Attempting MQTT connection...");
+  if (!client.connect(client_id)) {
+    Serial.print("failed, rc=");
+    Serial.print(client.state());
+    Serial.println(" try again in 5 seconds");
+    return false;
+  }
+  Serial.println("connected..");
+  snprintf(msg,50,"Startup %li - Version %s", espID, version);
+  ledFlash(2,100);
+  MQTTdebugPrint(msg);
+  subscribeTopics();
+  return true;
 }
 
 void checkSensorState(char* stopic, char* msg) {

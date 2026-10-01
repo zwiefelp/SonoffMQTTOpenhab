@@ -99,6 +99,11 @@ Konfiguration an:
 3. Der Server pusht die Konfiguration **zeilenweise** als `schlüssel:wert`
 4. Mit `EndConfig` schließt der Server die Konfiguration ab — das Gerät ist
    anschließend betriebsbereit
+5. Kommt binnen 30 s keine vollständige Konfiguration (z. B. openHAB nicht
+   erreichbar), fordert das Gerät sie erneut an
+6. Bei einer späteren Neuverbindung zum Broker abonniert ein bereits
+   konfiguriertes Gerät seine Topics neu, ohne die Konfiguration erneut
+   anzufordern
 
 **Topics (`<id>` = ESP-ChipID):**
 
@@ -141,7 +146,10 @@ Konfiguration an:
 ## Bedienung am Gerät
 
 - **Kurzer Tastendruck:** Relais umschalten (ON/OFF)
-- **Tastendruck > 500 ms:** Neustart des Geräts
+- **Taster 5 s gedrückt halten:** Neustart des Geräts
+- Ohne WLAN oder Broker läuft das Gerät weiter, der Taster schaltet das Relais
+  (sobald es einmal konfiguriert war). WLAN und Broker werden im Hintergrund neu
+  verbunden.
 
 ## 433-MHz-Codes
 
