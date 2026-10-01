@@ -27,7 +27,8 @@ fi
 [ -f src/config.h ] || { echo "src/config.h fehlt (Vorlage: src/config.h.example)" >&2; exit 1; }
 
 # Nur die VERSION-Zeile lesen - config.h enthaelt auch die WLAN-Zugangsdaten
-VERSION="$(sed -n 's/^#define VERSION "\(.*\)"/\1/p' src/config.h)"
+# (config.h hat CRLF-Zeilenenden -> \r entfernen, sonst landet es im Dateinamen)
+VERSION="$(tr -d '\r' < src/config.h | sed -n 's/^#define VERSION "\(.*\)"/\1/p')"
 [ -n "$VERSION" ] || { echo "VERSION in src/config.h nicht gefunden" >&2; exit 1; }
 
 if [ -n "$(git status --porcelain -- src lib platformio.ini)" ]; then
