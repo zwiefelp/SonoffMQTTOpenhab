@@ -29,7 +29,7 @@ extern "C" {
 }
 
 #define WIFI_SETUP_MS 20000    // so lange wartet setup() hoechstens aufs WLAN
-#define WIFI_RETRY_MS 30000    // Abstand der WLAN-Verbindungsversuche in loop()
+#define WIFI_RETRY_MS 300000   // neues WiFi.begin() hoechstens alle 5 min (nur wenn das SDK aufgab)
 #define CONFIG_RETRY_MS 30000  // ohne (vollstaendige) Konfiguration erneut anfragen
 #define BTN_RESTART_MS 5000    // Taster so lange halten → Neustart
 
@@ -37,6 +37,9 @@ char confTopic[50];
 char debugTopic[50];
 unsigned int confstage;
 unsigned long confRequestTs;
+int lastWifiReason = 0;                  // Grund der letzten WLAN-Trennung (SDK-Code), 0 = keine
+int lastMqttState = MQTT_STATE_NONE;     // client.state() beim letzten MQTT-Abbruch
+WiFiEventHandler wifiDisconnectHandler;
 int sensorcount;
 int sonoffcount;
 int usedisplay;
@@ -110,6 +113,9 @@ void setup() {
 
   WiFi.mode(WIFI_STA);
   WiFi.setAutoReconnect(true);
+  wifiDisconnectHandler = WiFi.onStationModeDisconnected([](const WiFiEventStationModeDisconnected& e) {
+    lastWifiReason = e.reason;
+  });
   WiFi.begin(ssid, password);
   Serial.println("WiFi begun");
   Serial.print("Connecting to ");
@@ -170,13 +176,22 @@ void setup() {
 
 /**
  * WLAN-Verbindung pruefen, ohne zu blockieren. Das SDK verbindet selbst neu
- * (setAutoReconnect); zusaetzlich alle WIFI_RETRY_MS ein neuer Versuch.
+ * (setAutoReconnect). Ein erneutes WiFi.begin() bricht einen laufenden Verbindungsaufbau
+ * ab – bei schlechtem Empfang kaeme das Board so nie durch. Deshalb nur, wenn das SDK
+ * aufgegeben hat (WL_CONNECT_FAILED / WL_NO_SSID_AVAIL), und hoechstens alle WIFI_RETRY_MS.
  */
 void wifiLoop() {
   static bool wasConnected = WiFi.status() == WL_CONNECTED;
   static unsigned long lastAttempt = millis();
+  static wl_status_t lastStatus = WL_IDLE_STATUS;
 
-  if (WiFi.status() == WL_CONNECTED) {
+  wl_status_t status = WiFi.status();
+  if (status != lastStatus) {
+    Serial.printf("WiFi status %d -> %d\n", lastStatus, status);
+    lastStatus = status;
+  }
+
+  if (status == WL_CONNECTED) {
     if (!wasConnected) {
       Serial.println("WiFi connected");
       ledFlash(2,100);
@@ -186,7 +201,8 @@ void wifiLoop() {
   }
 
   wasConnected = false;
-  if (millis() - lastAttempt >= WIFI_RETRY_MS) {
+  bool gaveUp = status == WL_CONNECT_FAILED || status == WL_NO_SSID_AVAIL;
+  if (gaveUp && millis() - lastAttempt >= WIFI_RETRY_MS) {
     lastAttempt = millis();
     Serial.print("Connecting to ");
     Serial.print(ssid);
@@ -296,6 +312,13 @@ void sensorLoop() {
 void loop() {
   ArduinoOTA.handle();
   wifiLoop();
+
+  // Grund eines MQTT-Abbruchs merken, er geht mit der naechsten Startmeldung raus
+  static bool mqttWasConnected = false;
+  if (mqttWasConnected && !client.connected()) {
+    lastMqttState = client.state();
+  }
+  mqttWasConnected = client.connected();
 
   if (WiFi.status() == WL_CONNECTED && !client.connected()) {
     // Konfiguration nur neu anfordern, solange keine vorliegt. Frueher wurde confstage nach

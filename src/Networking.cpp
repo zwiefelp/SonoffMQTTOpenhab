@@ -100,7 +100,16 @@ bool mqttReconnect() {
     return false;
   }
   Serial.println("connected..");
-  snprintf(msg,50,"Startup %li - Version %s", espID, version);
+  // Startmeldung mit Empfang und Grund des letzten Abbruchs (Schluessel=Wert nach ":",
+  // der Debug-Tab zeigt sie als Felder): MQTTrc = client.state() beim Abbruch
+  // (-4 Timeout, -3 Verbindung verloren …), WiFiReason = SDK-Trennungsgrund (z. B. 201 kein AP)
+  int n = snprintf(msg, sizeof(msg), "Startup %li - Version %s: RSSI=%d", espID, version, WiFi.RSSI());
+  if (lastMqttState != MQTT_STATE_NONE && n < (int)sizeof(msg)) {
+    n += snprintf(msg + n, sizeof(msg) - n, " MQTTrc=%d", lastMqttState);
+  }
+  if (lastWifiReason != 0 && n < (int)sizeof(msg)) {
+    snprintf(msg + n, sizeof(msg) - n, " WiFiReason=%d", lastWifiReason);
+  }
   ledFlash(2,100);
   MQTTdebugPrint(msg);
   subscribeTopics();

@@ -6,7 +6,7 @@
  */
 #define SERIAL_DEBUG
 #define DHTTYPE DHT22
-#define VERSION "2.2 OTA"
+#define VERSION "2.3 OTA"
 #define SSID "<WLAN-SSID>"
 #define WIFIPASSWORD "<WLAN-PASSWORT>"
 #undef DISPLAY

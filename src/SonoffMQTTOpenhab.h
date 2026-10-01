@@ -4,6 +4,9 @@ extern char confTopic[50];
 extern char debugTopic[50];
 extern unsigned int confstage;
 extern unsigned long confRequestTs;
+#define MQTT_STATE_NONE 99   // noch kein MQTT-Abbruch seit dem Start
+extern int lastWifiReason;
+extern int lastMqttState;
 extern int sensorcount;
 extern int sonoffcount;
 extern char msg[200];
