@@ -53,6 +53,21 @@ pio run --target upload --upload-port <geraete-ip>
 pio device monitor
 ```
 
+### Deploy auf den openHAB-Pi
+
+Die Boards hängen im WLAN des Pi (`192.168.1.x`) und sind nur von dort
+erreichbar. `deploy/deploy-fw.sh` baut die Firmware, kopiert sie als
+`SonoffMQTTOpenhab-<Version>.bin` nach `pi@192.168.20.17:/etc/openhab2/fw` und
+flasht sie auf Wunsch per OTA vom Pi aus (`espota.py`):
+
+```bash
+deploy/deploy-fw.sh                          # bauen und kopieren
+FLASH_IP=192.168.1.109 deploy/deploy-fw.sh   # zusätzlich auf dieses Board flashen
+```
+
+Die IP eines Boards liefert `getIP` (siehe unten). Die Version kommt aus
+`VERSION` in `src/config.h`.
+
 ### Abhängigkeiten
 
 In `platformio.ini` als `lib_deps` hinterlegt:
