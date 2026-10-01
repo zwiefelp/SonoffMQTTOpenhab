@@ -26,7 +26,9 @@ void getConfiguration(char* cmd) {
 
   if ( strcmp(cmd,"getVersion") == 0 ) {
     ledFlash(2,100);
-    snprintf(temp,50,"Version %s", version);
+    // RSSI anhaengen (Schluessel=Wert nach ":" wie in der Startmeldung), so sieht man den
+    // Empfang auch ohne Neuverbindung
+    snprintf(temp,50,"Version %s: RSSI=%d", version, WiFi.RSSI());
     client.publish(confTopic ,temp, true);
   }
 
@@ -39,7 +41,7 @@ void getConfiguration(char* cmd) {
   if ( strcmp(cmd,"getIP") == 0 ) {
     ledFlash(2,100);
     IPAddress ip = WiFi.localIP();
-    snprintf(temp,50,"IP: %d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3]);
+    snprintf(temp,50,"IP: %d.%d.%d.%d RSSI=%d", ip[0], ip[1], ip[2], ip[3], WiFi.RSSI());
     client.publish(confTopic ,temp, true);
   }
 

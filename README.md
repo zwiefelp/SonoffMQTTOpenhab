@@ -157,9 +157,9 @@ Konfiguration an:
 
 | Kommando      | Wirkung                             |
 | ------------- | ----------------------------------- |
-| `getVersion`  | publiziert die Firmware-Version     |
+| `getVersion`  | publiziert die Firmware-Version, ab 2.4 mit Empfang: `Version 2.4 OTA: RSSI=-71` |
 | `getTopic`    | publiziert das State-Topic          |
-| `getIP`       | publiziert die IP-Adresse           |
+| `getIP`       | publiziert die IP-Adresse, ab 2.4 mit Empfang: `IP: 192.168.1.110 RSSI=-71` |
 | `restart`     | startet das Gerät neu               |
 | `reconfigure` | fordert die Konfiguration erneut an |
 
