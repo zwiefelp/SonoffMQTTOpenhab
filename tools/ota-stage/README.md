@@ -23,4 +23,9 @@ PROBE_ONLY=1 tools/ota-stage/ota-stage.sh <board-ip>     # nur freien Platz mess
 vorher die Reichweite bedenken; ohne Verbindung bleibt nur USB. Das Relais ist nach dem
 Neustart aus.
 
+**Hilft nicht bei `ERROR[8]: Flash config wrong real: 1048576 IDE: 4194304`** (Firmware 1.1 auf
+Licht_Bar, Licht_Schlafzimmer, Licht_Schrankraum): Die laufende Firmware wurde für 4 MB gebaut,
+der Chip hat 1 MB – sie lehnt deshalb *jedes* OTA-Update ab, unabhängig von der Größe. Nur
+USB-Flash. Das Skript bricht hier bei der Messung ab („unerwartete Antwort“).
+
 Bisher eingesetzt: Sonoff_Stecker2 (8704174), 2026-10-02.
