@@ -108,8 +108,14 @@ bool mqttReconnect() {
     n += snprintf(msg + n, sizeof(msg) - n, " MQTTrc=%d", lastMqttState);
   }
   if (lastWifiReason != 0 && n < (int)sizeof(msg)) {
-    snprintf(msg + n, sizeof(msg) - n, " WiFiReason=%d", lastWifiReason);
+    n += snprintf(msg + n, sizeof(msg) - n, " WiFiReason=%d", lastWifiReason);
   }
+  // LoopMax = laengster loop()-Abstand waehrend der vorherigen Verbindung (ms)
+  if (lastMqttState != MQTT_STATE_NONE && n < (int)sizeof(msg)) {
+    snprintf(msg + n, sizeof(msg) - n, " LoopMax=%lu", loopMaxMs);
+  }
+  loopMaxMs = 0;
+  lastLoopTs = millis();   // Dauer dieses Verbindungsaufbaus nicht mitzaehlen
   ledFlash(2,100);
   MQTTdebugPrint(msg);
   subscribeTopics();

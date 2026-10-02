@@ -32,6 +32,7 @@ extern "C" {
 #define WIFI_RETRY_MS 300000   // neues WiFi.begin() hoechstens alle 5 min (nur wenn das SDK aufgab)
 #define CONFIG_RETRY_MS 30000  // ohne (vollstaendige) Konfiguration erneut anfragen
 #define BTN_RESTART_MS 5000    // Taster so lange halten → Neustart
+#define MQTT_KEEPALIVE_S 60    // Broker trennt erst nach 1,5 × Keepalive ohne Paket (vorher 15 s → 22 s)
 
 char confTopic[50];
 char debugTopic[50];
@@ -40,6 +41,8 @@ unsigned long confRequestTs;
 int lastWifiReason = 0;                  // Grund der letzten WLAN-Trennung (SDK-Code), 0 = keine
 int lastMqttState = MQTT_STATE_NONE;     // client.state() beim letzten MQTT-Abbruch
 WiFiEventHandler wifiDisconnectHandler;
+unsigned long loopMaxMs = 0;             // laengster Abstand zweier loop()-Durchlaeufe seit der letzten Verbindung
+unsigned long lastLoopTs = 0;
 int sensorcount;
 int sonoffcount;
 int usedisplay;
@@ -171,6 +174,7 @@ void setup() {
 
   /* Prepare MQTT client */
   client.setServer(broker, 1883);
+  client.setKeepAlive(MQTT_KEEPALIVE_S);
   client.setCallback(mqttCallback);
 }
 
@@ -310,6 +314,14 @@ void sensorLoop() {
  * Main
  */
 void loop() {
+  // Blockiert die Firmware (oder werden ihr durch Interrupts die Rechenzeit entzogen),
+  // waechst der Abstand – geht mit der naechsten Startmeldung als LoopMax raus
+  unsigned long loopNow = millis();
+  if (lastLoopTs != 0 && loopNow - lastLoopTs > loopMaxMs) {
+    loopMaxMs = loopNow - lastLoopTs;
+  }
+  lastLoopTs = loopNow;
+
   ArduinoOTA.handle();
   wifiLoop();
 

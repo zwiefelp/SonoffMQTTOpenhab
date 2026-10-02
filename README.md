@@ -131,7 +131,7 @@ Konfiguration an:
 | ------------------------------ | --------------- | --------------------------- |
 | `/openhab/configuration`       | Gerät → Server  | Konfigurations-Anforderung  |
 | `/openhab/configuration/<id>`  | Server → Gerät  | Konfigurationsdaten         |
-| `/openhab/debug/<id>`          | Gerät → Server  | Debug-Ausgaben, u. a. die Startmeldung bei jeder MQTT-Verbindung: `Startup <id> - Version 2.3 OTA: RSSI=-71 MQTTrc=-3 WiFiReason=201` (MQTTrc/WiFiReason nur nach einem Abbruch) |
+| `/openhab/debug/<id>`          | Gerät → Server  | Debug-Ausgaben, u. a. die Startmeldung bei jeder MQTT-Verbindung: `Startup <id> - Version 2.5 OTA: RSSI=-71 MQTTrc=-3 WiFiReason=201 LoopMax=140` (MQTTrc/WiFiReason/LoopMax nur nach einem Abbruch; LoopMax = längster `loop()`-Abstand in ms während der vorherigen Verbindung). MQTT-Keepalive 60 s |
 
 **Konfigurationsschlüssel** (Auswahl, siehe `mqttconfig.cpp`):
 

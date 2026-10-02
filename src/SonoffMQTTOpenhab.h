@@ -7,6 +7,8 @@ extern unsigned long confRequestTs;
 #define MQTT_STATE_NONE 99   // noch kein MQTT-Abbruch seit dem Start
 extern int lastWifiReason;
 extern int lastMqttState;
+extern unsigned long loopMaxMs;
+extern unsigned long lastLoopTs;
 extern int sensorcount;
 extern int sonoffcount;
 extern char msg[200];
